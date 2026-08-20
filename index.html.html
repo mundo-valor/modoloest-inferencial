@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EconometricVal Pro — Modelado econométrico inmobiliario MRLM bajo norma ABNT NBR 14653-2 con diagnóstico estocástico e inferencia auditable.">
+    <title>EconometricVal Pro — Regresión Inmobiliaria Auditable bajo NBR 14653-2</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS (XLSX / CSV) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --navy-0: #0A1B2E;
+            --navy-1: #0F2740;
+            --navy-2: #163756;
+            --paper: #EDF1EF;
+            --paper-dim: #D9E2E0;
+            --ink: #0E2340;
+            --ink-soft: #43586E;
+            --brass: #C4913F;
+            --brass-soft: #E4C489;
+            --grid-line: #2C567C;
+            --good: #3F9A72;
+            --warn: #C4913F;
+            --bad: #C15B4A;
+            --radius: 14px;
+            --display: 'Space Grotesk', sans-serif;
+            --body: 'IBM Plex Sans', sans-serif;
+            --mono: 'IBM Plex Mono', monospace;
+        }
+
+        body {
+            font-family: var(--body);
+            background-color: #f1f5f9;
+            color: var(--ink);
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--display);
+        }
+
+        .font-mono-code {
+            font-family: var(--mono);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .tab-btn.active { border-bottom: 2px solid #C4913F; color: #0A1B2E; font-weight: 700; background-color: #f8fafc; }
+        .sisdea-panel-header { background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); }
+
+        .hero-grid {
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.15;
+            mask-image: radial-gradient(ellipse at 40% 30%, black 15%, transparent 75%);
+        }
+
+        .reg-line {
+            stroke-dasharray: 520;
+            stroke-dashoffset: 520;
+            animation: draw 1.6s ease forwards 0.3s;
+        }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+
+        .dot { animation: pop 0.5s ease backwards; }
+        @keyframes pop {
+            from { opacity: 0; transform: scale(0.4); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar Global -->
+    <header class="bg-[#0A1B2E] text-white shadow-lg sticky top-0 z-50 border-b border-[#C4913F]/30 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <a href="#top" class="flex items-center space-x-3 text-white no-underline">
+                <div class="bg-[#C4913F] p-2 rounded-lg text-[#0A1B2E]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 20 L9 12 L14 15 L21 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="9" cy="12" r="1.6" fill="currentColor"/>
+                        <circle cx="14" cy="15" r="1.6" fill="currentColor"/>
+                        <circle cx="21" cy="5" r="1.6" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-base sm:text-lg font-bold tracking-tight text-slate-100 flex items-center gap-2">
+                        EconometricVal Pro 
+                        <span class="text-[10px] bg-[#C4913F]/20 text-[#E4C489] px-2 py-0.5 rounded border border-[#C4913F]/40 font-mono-code">NBR 14653-2</span>
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">v2.2</span>
+                    </span>
+                </div>
+            </a>
+            
+            <nav class="hidden md:flex items-center space-x-6 text-xs font-mono-code text-slate-300">
+                <a href="#norma" class="hover:text-[#E4C489] transition">Encuadramiento NBR</a>
+                <a href="#app" class="hover:text-[#E4C489] transition">Laboratorio MRLM</a>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <a href="#app" class="text-xs bg-[#C4913F] hover:bg-[#b07f33] text-[#0A1B2E] px-4 py-2 rounded-lg font-bold transition shadow flex items-center gap-1.5 font-mono-code">
+                    <i class="fa-solid fa-calculator"></i> Ir a la Aplicación
+                </a>
+                <a href="https://paypal.me/spilimcurso" target="_blank" rel="noopener noreferrer" class="hidden sm:flex text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 px-3 py-2 rounded-lg font-semibold transition items-center gap-1.5">
+                    <i class="fa-brands fa-paypal"></i> Donar
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 1. SECCIÓN HERO -->
+    <section class="relative bg-gradient-to-b from-[#0A1B2E] via-[#0F2740] to-[#163756] text-white py-16 lg:py-20 overflow-hidden border-b border-[#C4913F]/20" id="top">
+        <div class="absolute inset-0 hero-grid pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C4913F]/15 border border-[#C4913F]/30 text-[#E4C489] text-xs font-mono-code tracking-wider uppercase">
+                        <i class="fa-solid fa-shield-halved"></i> MRLM · ABNT NBR 14653-2
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+                        Cada valor de mercado, respaldado por una regresión que se puede <span class="text-[#E4C489]">auditar</span>.
+                    </h1>
+                    <p class="text-slate-300 text-base sm:text-lg max-w-2xl leading-relaxed">
+                        Cargue su muestra de transacciones u ofertas, configure transformaciones de escala independientes y obtenga el encuadramiento de fundamentación técnica y precisión en tiempo real con diagnóstico estocástico riguroso.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <a href="#app" class="bg-[#C4913F] hover:bg-[#b07f33] text-[#0A1B2E] text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition flex items-center gap-2 font-mono-code">
+                            <i class="fa-solid fa-arrow-down"></i> Iniciar Modelado Interactivo
+                        </a>
+                        <button onclick="loadPanamaDatasetAndGo()" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-200 text-sm font-semibold px-4 py-3 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-book-bookmark text-emerald-400"></i> Probar con Muestra de Panamá
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/60 text-xs font-mono-code text-slate-300">
+                        <div>
+                            <span class="block text-slate-400 text-[11px]">Procesamiento</span>
+                            <strong class="text-white">100% Local (Navegador)</strong>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-[11px]">Acceso</span>
+                            <strong class="text-emerald-400">Libre y Gratuito</strong>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-[11px]">Capacidad Muestral</span>
+                            <strong class="text-white">150 datos · 15 vars</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Visual SVG Interactiva -->
+                <div class="lg:col-span-5">
+                    <div class="bg-[#0F2740]/90 border border-slate-600/60 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+                        <div class="flex justify-between items-center mb-3 text-xs font-mono-code text-slate-400 border-b border-slate-700/80 pb-2">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line text-[#C4913F]"></i> Muestra de Calibración</span>
+                            <strong class="text-[#E4C489]">R² Aj. = 0,98</strong>
+                        </div>
+                        
+                        <div class="relative w-full aspect-[4/3] bg-[#0A1B2E]/60 rounded-xl p-2 border border-slate-700/50">
+                            <svg viewBox="0 0 400 260" class="w-full h-full">
+                                <line x1="40" y1="20" x2="40" y2="220" stroke="rgba(237,241,239,.25)" stroke-width="1"/>
+                                <line x1="40" y1="220" x2="380" y2="220" stroke="rgba(237,241,239,.25)" stroke-width="1"/>
+                                <!-- Banda de Confianza 80% -->
+                                <polygon points="55,160 365,60 365,95 55,195" fill="#C4913F" opacity="0.16"/>
+                                <!-- Recta de Regresión -->
+                                <line class="reg-line" x1="55" y1="178" x2="365" y2="78" stroke="#E4C489" stroke-width="2.5"/>
+                                <!-- Dispersión de Puntos -->
+                                <g fill="#8FD3E8">
+                                    <circle class="dot" style="animation-delay:.05s" cx="70" cy="185" r="4.5"/>
+                                    <circle class="dot" style="animation-delay:.10s" cx="95" cy="150" r="4"/>
+                                    <circle class="dot" style="animation-delay:.15s" cx="120" cy="168" r="4.5"/>
+                                    <circle class="dot" style="animation-delay:.20s" cx="150" cy="140" r="4"/>
+                                    <circle class="dot" style="animation-delay:.25s" cx="175" cy="120" r="5"/>
+                                    <circle class="dot" style="animation-delay:.30s" cx="200" cy="132" r="4"/>
+                                    <circle class="dot" style="animation-delay:.35s" cx="230" cy="108" r="4.5"/>
+                                    <circle class="dot" style="animation-delay:.40s" cx="255" cy="95" r="4"/>
+                                    <circle class="dot" style="animation-delay:.45s" cx="285" cy="88" r="4.5"/>
+                                    <circle class="dot" style="animation-delay:.50s" cx="310" cy="70" r="5"/>
+                                    <circle class="dot" style="animation-delay:.55s" cx="335" cy="80" r="4"/>
+                                    <circle class="dot" style="animation-delay:.60s" cx="355" cy="62" r="4.5"/>
+                                </g>
+                                <text x="45" y="238" font-family="IBM Plex Mono" font-size="9" fill="rgba(237,241,239,.5)">Área Construida (Ac) →</text>
+                                <text x="12" y="28" font-family="IBM Plex Mono" font-size="9" fill="rgba(237,241,239,.5)" transform="rotate(-90 12 28)">Precio de Oferta ↑</text>
+                            </svg>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-700/80 text-center font-mono-code text-[11px]">
+                            <div class="bg-slate-800/60 p-1.5 rounded">
+                                <span class="text-slate-400 block text-[9px]">F Calculado</span>
+                                <strong class="text-slate-100">477,5</strong>
+                            </div>
+                            <div class="bg-slate-800/60 p-1.5 rounded">
+                                <span class="text-slate-400 block text-[9px]">p-valor F</span>
+                                <strong class="text-emerald-400">0,00%</strong>
+                            </div>
+                            <div class="bg-slate-800/60 p-1.5 rounded">
+                                <span class="text-slate-400 block text-[9px]">Durbin-W.</span>
+                                <strong class="text-slate-100">2,37</strong>
+                            </div>
+                            <div class="bg-emerald-950/60 border border-emerald-500/30 p-1.5 rounded">
+                                <span class="text-emerald-300 block text-[9px]">Encuadramiento</span>
+                                <strong class="text-emerald-400">Grado III</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. ENCUADRAMIENTO NORMATIVO NBR 14653-2 -->
+    <section class="py-14 bg-slate-100 border-b border-slate-300" id="norma">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mb-8">
+                <span class="text-[#C4913F] text-xs font-mono-code tracking-widest uppercase font-bold">Conformidad Técnica</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Los Seis Ítems de Fundamentación</h2>
+                <p class="text-slate-600 text-sm mt-2">Diferenciación estricta entre declaraciones de campo del valuador y métricas inferenciales calculadas automáticamente.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-300 shadow-sm overflow-hidden">
+                <div class="divide-y divide-slate-200 font-sans text-xs">
+                    <div class="grid grid-cols-12 p-3.5 bg-slate-50 font-bold text-slate-700">
+                        <div class="col-span-1 font-mono-code">Ítem</div>
+                        <div class="col-span-7 sm:col-span-8">Exigencia Normativa NBR 14653-2</div>
+                        <div class="col-span-4 sm:col-span-3 text-right">Modalidad de Evaluación</div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">01</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Caracterización del Inmueble Tasable:</strong> Nivel de inspección y detalle del bien objeto.</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-amber-100 text-amber-800 border border-amber-300">Declaración del Tasador</span></div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">02</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Cantidad Mínima de Datos Efectivos:</strong> Verificación de n frente a umbrales 6(k+1), 4(k+1) y 3(k+1).</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Cálculo Automático</span></div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">03</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Identificación de Datos de Mercado:</strong> Trazabilidad, fuentes documentales y verificación in situ.</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-amber-100 text-amber-800 border border-amber-300">Declaración del Tasador</span></div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">04</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Extrapolación de Variables:</strong> Cálculo dinámico del desvío porcentual de los atributos del sujeto tasable.</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Cálculo Automático</span></div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">05</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Significancia Individual de Regresores:</strong> Contraste bilateral t de Student (p-valor máx ≤ 10%, 20%, 30%).</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Cálculo Automático</span></div>
+                    </div>
+                    <div class="grid grid-cols-12 p-3.5 items-center hover:bg-slate-50">
+                        <div class="col-span-1 font-mono-code font-bold text-[#C4913F]">06</div>
+                        <div class="col-span-7 sm:col-span-8"><strong class="text-slate-800">Significancia Global del Modelo:</strong> Contraste ANOVA prueba F (p-valor F ≤ 1%, 2%, 5%).</div>
+                        <div class="col-span-4 sm:col-span-3 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-mono-code font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Cálculo Automático</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 3. APLICACIÓN INTERACTIVA INTEGRADA (MÓDULO DE CÁLCULO)   -->
+    <!-- ========================================================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 flex-grow w-full" id="app">
+        
+        <!-- Encabezado de la Aplicación -->
+        <div class="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl shadow-md border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="text-xs font-mono-code text-[#E4C489] uppercase tracking-wider block font-bold">Consola de Modelado Activo</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Laboratorio Econométrico Inmobiliario</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Ajuste MCO, transformaciones independientes y encuadramiento bajo ABNT NBR 14653-2.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button id="btnLoadBookData" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg font-semibold transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-book-bookmark"></i> Cargar Muestra Panamá (Libro)
+                </button>
+                <button id="btnClearData" class="text-xs bg-slate-800 hover:bg-rose-950/80 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-lg font-medium transition cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. Configuración de Carga y Variables -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Carga de Archivos -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-xs uppercase text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-arrow-up text-indigo-600"></i> Carga de Datos Muestrales
+                        </h3>
+                        <span id="dataCountBadge" class="text-[11px] font-mono-code font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0 / 0 activos</span>
+                    </div>
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center hover:border-indigo-500 transition cursor-pointer bg-slate-50/80 relative" id="dropZone">
+                        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <i class="fa-solid fa-file-excel text-3xl text-emerald-600 mb-2"></i>
+                        <p class="text-xs font-bold text-slate-700">Arrastre planilla Excel (.xlsx) o CSV</p>
+                        <p class="text-[10px] text-slate-400 mt-1 font-mono-code">Hasta 150 registros y 15 variables</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span class="truncate max-w-[200px]">Archivo: <strong id="datasetName" class="text-slate-800 font-mono-code">Ninguno</strong></span>
+                </div>
+            </div>
+
+            <!-- Configuración de Variables y Escalas -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 lg:col-span-2 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-xs uppercase text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i> Formulación del Modelo & Escalas
+                        </h3>
+                        <div class="flex gap-2 text-xs">
+                            <span class="text-indigo-600 font-medium cursor-pointer hover:underline" id="btnSelectAllPreds">Marcar todas</span>
+                            <span class="text-slate-300">|</span>
+                            <span class="text-slate-500 font-medium cursor-pointer hover:underline" id="btnUnselectAllPreds">Desmarcar</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Variable Respuesta (Y)</label>
+                            <select id="selectDepVar" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-indigo-500 font-medium">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Escala de Y</label>
+                            <select id="transfDepVar" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-indigo-500 font-medium">
+                                <option value="linear">Lineal: Y</option>
+                                <option value="ln" selected>Logarítmica: ln(Y)</option>
+                                <option value="inv">Inversa: 1/Y</option>
+                                <option value="sqrt">Raíz Cuadrada: √Y</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Modalidad de Precio</label>
+                            <select id="depVarType" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-indigo-500 font-medium">
+                                <option value="PT">Precio Total (PT - UM)</option>
+                                <option value="PU">Precio Unitario (PU - UM/m²)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Regresores (X) y Escalas Individuales</label>
+                    <div id="independentVarsContainer" class="max-h-28 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg p-2 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <p class="text-slate-400 italic text-[11px] col-span-2">Cargue datos para configurar variables predictoras.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ítem 1 · Caracterización del Inmueble</label>
+                            <select id="selCaracterizacion" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-indigo-500 font-medium">
+                                <option value="3" selected>Completa (Grado III)</option>
+                                <option value="2">Parcial (Grado II)</option>
+                                <option value="1">Básica (Grado I)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ítem 3 · Identificación de Datos</label>
+                            <select id="selIdentificacion" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-indigo-500 font-medium">
+                                <option value="3" selected>Completa + Sitio (Grado III)</option>
+                                <option value="2">Completa (Grado II)</option>
+                                <option value="1">Muestral (Grado I)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex flex-wrap gap-2">
+                        <button id="btnRandomizeScales" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-dice"></i> Escalas Aleatorias
+                        </button>
+                        <button id="btnMonteCarloSearch" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Búsqueda Multimodelo (150)
+                        </button>
+                    </div>
+                    <button id="btnRunRegression" class="bg-[#0A1B2E] hover:bg-[#163756] text-[#E4C489] text-xs font-bold px-5 py-2 rounded-lg transition shadow flex items-center gap-2 cursor-pointer font-mono-code">
+                        <i class="fa-solid fa-calculator"></i> CALCULAR MODELO
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Pestañas de Resultados -->
+        <div id="resultsWrapper" class="hidden space-y-4">
+            
+            <!-- Barra de Pestañas -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 px-3 py-2 flex flex-wrap gap-2 text-xs font-medium border-b">
+                <button class="tab-btn active py-1.5 px-3 rounded-lg transition" data-tab="tab-model"><i class="fa-solid fa-square-root-variable mr-1"></i> Resultados RL & ANOVA</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-slate-500 hover:text-slate-800 transition" data-tab="tab-diagnostics"><i class="fa-solid fa-microscope mr-1"></i> Gráficos de Residuos & Supuestos</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-slate-500 hover:text-slate-800 transition" data-tab="tab-scatters"><i class="fa-solid fa-chart-line mr-1"></i> Dispersión Bivariada (Y vs X)</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-slate-500 hover:text-slate-800 transition" data-tab="tab-correlations"><i class="fa-solid fa-table-cells mr-1"></i> Matriz de Colinealidad</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-slate-500 hover:text-slate-800 transition" data-tab="tab-data"><i class="fa-solid fa-table mr-1"></i> Muestra & Control</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-slate-500 hover:text-slate-800 transition" data-tab="tab-comparison"><i class="fa-solid fa-ranking-star mr-1"></i> Explorador Multimodelo</button>
+                <button class="tab-btn py-1.5 px-3 rounded-lg text-[#C4913F] font-bold transition" data-tab="tab-valuation"><i class="fa-solid fa-hand-holding-dollar mr-1"></i> Módulo de Tasación</button>
+            </div>
+
+            <!-- TAB 1: RESULTADOS RL + ANOVA + COEFICIENTES -->
+            <div id="tab-model" class="tab-content space-y-4">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    
+                    <!-- Panel de Resultados RL Completo -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                        <div class="sisdea-panel-header px-4 py-2.5 border-b border-slate-300 flex items-center justify-between">
+                            <span class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-list-check text-indigo-600"></i> Parámetros Globales
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-mono-code">ABNT NBR 14653-2</span>
+                        </div>
+                        
+                        <div class="p-4 text-xs space-y-3 font-sans overflow-y-auto max-h-[520px] custom-scrollbar">
+                            
+                            <!-- 1. Datos y Variables -->
+                            <div class="space-y-1">
+                                <div class="font-bold text-[11px] text-slate-800 flex items-center gap-1 border-b border-slate-200 pb-0.5">
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-500"></i> Datos y Variables
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Datos / Considerados:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_dados">0 / 0</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Variables / Consideradas:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_vars">0 / 0</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Grados de Libertad:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_gl">0</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Grado Fundamentación:</span>
+                                    <strong class="text-right font-bold text-emerald-700 font-mono-code" id="panel_gfund_dados">Grado III</strong>
+                                </div>
+                            </div>
+
+                            <!-- 2. Coeficientes -->
+                            <div class="space-y-1">
+                                <div class="font-bold text-[11px] text-slate-800 flex items-center gap-1 border-b border-slate-200 pb-0.5">
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-500"></i> Coeficientes de Ajuste
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Correlación (r):</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_r">0,00</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Determinación (R²):</span>
+                                    <strong class="text-right text-indigo-700 font-mono-code font-bold" id="panel_r2">0,00%</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>R² Ajustado:</span>
+                                    <strong class="text-right text-indigo-700 font-mono-code font-bold" id="panel_r2adj">0,00%</strong>
+                                </div>
+                            </div>
+
+                            <!-- 3. Pruebas de Hipótesis -->
+                            <div class="space-y-1">
+                                <div class="font-bold text-[11px] text-slate-800 flex items-center gap-1 border-b border-slate-200 pb-0.5">
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-500"></i> Pruebas de Hipótesis
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>F Calculado:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_f">0,00</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Significancia Modelo (p):</span>
+                                    <strong class="text-right text-emerald-700 font-mono-code font-bold" id="panel_sigf">0,00%</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Grado Fundamentación (F):</span>
+                                    <strong class="text-right font-bold text-emerald-700 font-mono-code" id="panel_gfund_f">Grado III</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Durbin-Watson (d):</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_dw">0,00</strong>
+                                </div>
+                            </div>
+
+                            <!-- 4. Normalidad de los Residuos -->
+                            <div class="space-y-1">
+                                <div class="font-bold text-[11px] text-slate-800 flex items-center gap-1 border-b border-slate-200 pb-0.5">
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-500"></i> Normalidad de los Residuos
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>-1 y +1 desv. estándar:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_norm_1s">0,00%</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>-1,64 y +1,64 desv. estándar:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_norm_164s">0,00%</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>-1,96 y +1,96 desv. estándar:</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_norm_196s">0,00%</strong>
+                                </div>
+                            </div>
+
+                            <!-- 5. Diversos -->
+                            <div class="space-y-1">
+                                <div class="font-bold text-[11px] text-slate-800 flex items-center gap-1 border-b border-slate-200 pb-0.5">
+                                    <i class="fa-solid fa-caret-down text-[10px] text-slate-500"></i> Diversos
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Error Estándar (Se):</span>
+                                    <strong class="text-right text-slate-900 font-mono-code" id="panel_se">0,00</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Outliers del Modelo:</span>
+                                    <strong class="text-right font-mono-code" id="panel_outliers">0 (0,00%)</strong>
+                                </div>
+                                <div class="grid grid-cols-2 py-0.5 text-slate-600">
+                                    <span>Criterio AIC / SC:</span>
+                                    <strong class="text-right text-slate-700 font-mono-code text-[10px]" id="panel_aic_sc">0,00 / 0,00</strong>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Ecuación de Regresión, Tabla de Coeficientes y ANOVA -->
+                    <div class="lg:col-span-2 space-y-4">
+                        
+                        <!-- Ecuación de Regresión -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-2">
+                            <h4 class="font-bold text-xs text-slate-800 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-equals text-indigo-600"></i> Ecuación de Regresión MCO Estimada
+                            </h4>
+                            <div class="p-3 bg-slate-900 text-emerald-400 font-mono-code text-xs rounded-xl overflow-x-auto custom-scrollbar" id="txtEquationDisplay"></div>
+                        </div>
+
+                        <!-- Tabla de Coeficientes -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-2">
+                            <h4 class="font-bold text-xs text-slate-800 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-table text-indigo-600"></i> Parámetros de los Regresores y Prueba t de Student
+                            </h4>
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-[11px] text-left border rounded-lg">
+                                    <thead class="bg-slate-100 text-slate-700 font-semibold">
+                                        <tr>
+                                            <th class="p-2">Variable</th>
+                                            <th class="p-2">Escala</th>
+                                            <th class="p-2 text-right">Coeficiente (b)</th>
+                                            <th class="p-2 text-right">Error Std</th>
+                                            <th class="p-2 text-right">t-Calculado</th>
+                                            <th class="p-2 text-right">p-valor (%)</th>
+                                            <th class="p-2 text-right">V.I.F.</th>
+                                            <th class="p-2 text-center">Significancia NBR</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="coefTableBody" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tabla ANOVA -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-2">
+                            <h4 class="font-bold text-xs text-slate-800 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-table-list text-indigo-600"></i> Análisis de Varianza (ANOVA)
+                            </h4>
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-left text-xs border border-slate-200 rounded-lg">
+                                    <thead class="bg-slate-100 text-slate-700 font-semibold border-b">
+                                        <tr>
+                                            <th class="p-2">Fuente de Variación</th>
+                                            <th class="p-2 text-right">Suma de Cuadrados (SC)</th>
+                                            <th class="p-2 text-right">Grados Libertad (GL)</th>
+                                            <th class="p-2 text-right">Cuadrados Medios</th>
+                                            <th class="p-2 text-right">F Calculado</th>
+                                            <th class="p-2 text-right">p-valor F (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="anovaTableBody" class="divide-y divide-slate-100 font-mono-code"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Calificación Normativa NBR 14653-2 Detallada -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex flex-wrap justify-between items-center border-b pb-3 mb-4 gap-2">
+                        <div class="flex items-center gap-3">
+                            <h4 class="font-bold text-xs text-slate-800 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-award text-amber-500"></i> Encuadramiento Técnico Global (NBR 14653-2)
+                            </h4>
+                            <span id="badgeFund" class="px-2.5 py-0.5 rounded-full text-xs font-bold text-white bg-emerald-600">Grado III</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-700" id="txtFundGrade">Grado III (18 pts)</span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono-code" id="txtFundGlobalPoints">Total: 18 / 18 pts</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-[11px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
+                                    <th class="p-2 font-mono-code">Ítem</th>
+                                    <th class="p-2">Exigencia Normativa</th>
+                                    <th class="p-2 text-center">Grado III (3 pts)</th>
+                                    <th class="p-2 text-center">Grado II (2 pts)</th>
+                                    <th class="p-2 text-center">Grado I (1 pto)</th>
+                                    <th class="p-2 text-center">Resultado</th>
+                                    <th class="p-2 text-center">Calificación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nbrTableBodyGlobal" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: DIAGNÓSTICO DE RESIDUOS & SUPUESTOS (TARJETAS INDIVIDUALES CON JARQUE-BERA Y BREUSCH-PAGAN) -->
+            <div id="tab-diagnostics" class="tab-content hidden space-y-6">
+                
+                <!-- 1. Homocedasticidad y Varianza: Residuos vs Estimados + Prueba Breusch-Pagan -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-braille text-indigo-600"></i> Residuos Estandarizados vs Valores Estimados
+                            </h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Diagnóstico de dispersión y homocedasticidad. Líneas guía en ±2,00 desviaciones estándar (outliers en rojo).</p>
+                        </div>
+                        <!-- Panel Breusch-Pagan Integrado -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-4 text-xs font-mono-code">
+                            <div>
+                                <span class="text-slate-400 block text-[9px]">Prueba Breusch-Pagan</span>
+                                <span class="text-slate-700 font-bold" id="txtBPStat">LM = 0,00</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[9px]">p-valor (Chi²)</span>
+                                <span class="text-slate-900 font-bold" id="txtBPPval">0,00%</span>
+                            </div>
+                            <span id="badgeBP" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Homocedástico</span>
+                        </div>
+                    </div>
+                    <div class="h-80 w-full relative pt-2"><canvas id="chartResidualsVsFitted"></canvas></div>
+                </div>
+
+                <!-- 2. Normalidad de los Errores: Histograma de Frecuencia + Prueba Jarque-Bera -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-indigo-600"></i> Histograma de Frecuencia de los Errores
+                            </h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Distribución de frecuencias por intervalos de desviación estándar.</p>
+                        </div>
+                        <!-- Panel Jarque-Bera Integrado -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-4 text-xs font-mono-code">
+                            <div>
+                                <span class="text-slate-400 block text-[9px]">Prueba Jarque-Bera</span>
+                                <span class="text-slate-700 font-bold" id="txtJBStat">JB = 0,00</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[9px]">Asimetría / Curtosis</span>
+                                <span class="text-slate-900 font-bold" id="txtJBMoments">0,00 / 3,00</span>
+                            </div>
+                            <span id="badgeJB" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 font-mono-code">Normal (JB)</span>
+                        </div>
+                    </div>
+                    <div class="h-80 w-full relative pt-2"><canvas id="chartHistogramErrors"></canvas></div>
+                </div>
+
+                <!-- 3. Observaciones Influyentes: Distancia de Cook -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-chart-simple text-indigo-600"></i> Distancia de Cook por Observación
+                            </h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Evaluación del apalancamiento e influencia individual de cada dato sobre el vector de coeficientes Beta.</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-mono-code">
+                            <span class="text-slate-400 block text-[9px]">Criterio de Corte</span>
+                            <span class="text-blue-700 font-bold" id="txtCookLineVal">Umbral D_i = 1,00</span>
+                        </div>
+                    </div>
+                    <div class="h-80 w-full relative pt-2"><canvas id="chartCookPoints"></canvas></div>
+                </div>
+
+                <!-- 4. Bondad de Ajuste: Estimados vs Observados -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-indigo-600"></i> Valores Estimados vs Valores Observados
+                            </h4>
+                            <p class="text-xs text-slate-500 mt-0.5">Alineación de precios estimados en el eje X versus precios observados en el eje Y respecto a la bisectriz de 45°.</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-mono-code">
+                            <span class="text-slate-400 block text-[9px]">Referencia</span>
+                            <span class="text-emerald-700 font-bold">Bisectriz Teórica (45°)</span>
+                        </div>
+                    </div>
+                    <div class="h-80 w-full relative pt-2"><canvas id="chartObsVsFitted"></canvas></div>
+                </div>
+
+            </div>
+
+            <!-- TAB 3: DISPERSIÓN BIVARIADA (Y vs X) -->
+            <div id="tab-scatters" class="tab-content hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <h3 class="font-bold text-xs uppercase text-slate-800 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-indigo-600"></i> Dispersión Bivariada (Y en Eje Vertical)
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mb-4">La variable dependiente de precio (PT o PU) se ubica en las ordenadas frente a cada regresor en las abscisas.</p>
+                    <div id="scatterPlotsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MATRIZ DE COLINEALIDAD -->
+            <div id="tab-correlations" class="tab-content hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="mb-3">
+                        <h3 class="font-bold text-xs uppercase text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-table-cells text-indigo-600"></i> Matriz de Correlaciones en Escalas Transformadas
+                        </h3>
+                        <p class="text-[11px] text-slate-500">Calculada con las variables en su transformación activa. Coeficientes |r| ≥ 0,80 representan alerta crítica de multicolinealidad.</p>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-center text-xs border border-slate-200 rounded-lg" id="correlationMatrixTable"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: MUESTRA & CONTROL -->
+            <div id="tab-data" class="tab-content hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-3">
+                        <div>
+                            <h3 class="font-bold text-xs uppercase text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-table text-indigo-600"></i> Muestra de Mercado y Control de Inclusión
+                            </h3>
+                            <p class="text-[11px] text-slate-500">Habilite o desactive cualquier dato. Los registros desactivados se excluyen del cálculo matricial.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btnEnableAllRows" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">
+                                <i class="fa-solid fa-check-double mr-1"></i> Habilitar Todos
+                            </button>
+                            <button id="btnDisableOutliers" class="text-xs bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">
+                                <i class="fa-solid fa-filter mr-1"></i> Deshabilitar Outliers (|e_std| > 2)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar max-h-96 border rounded-xl">
+                        <table class="w-full text-left text-xs border-collapse" id="sampleDataTable">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0 z-10 border-b">
+                                <tr id="sampleDataTheadRow"></tr>
+                            </thead>
+                            <tbody id="sampleDataTbody" class="divide-y divide-slate-100 font-mono-code text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: EXPLORADOR MULTIMODELO -->
+            <div id="tab-comparison" class="tab-content hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="mb-3">
+                        <h3 class="font-bold text-xs uppercase text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-500"></i> Explorador Multimodelo de Transformaciones
+                        </h3>
+                        <p class="text-[11px] text-slate-500">Búsqueda de especificaciones combinando aleatoria e independientemente las escalas de cada regresor.</p>
+                    </div>
+                    <div class="mb-4 text-[11px] text-amber-900 bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-start gap-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5"></i>
+                        <span><strong>Advertencia metodológica:</strong> este ranking prueba 150 especificaciones al azar y ordena por mejor ajuste. Los p-valores del modelo "ganador" no están corregidos por comparaciones múltiples (data dredging). Valide siempre la plausibilidad económica e ingenieril del modelo seleccionado.</span>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs border border-slate-200 rounded-lg">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold border-b">
+                                <tr>
+                                    <th class="p-2 font-mono-code">ID</th>
+                                    <th class="p-2">Especificación de Variables</th>
+                                    <th class="p-2 text-right">R² Ajustado</th>
+                                    <th class="p-2 text-right">AIC</th>
+                                    <th class="p-2 text-right">p-valor F (%)</th>
+                                    <th class="p-2 text-center">Fundamentación</th>
+                                    <th class="p-2 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modelsComparisonTbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: MÓDULO DE TASACIÓN -->
+            <div id="tab-valuation" class="tab-content hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
+                    <div class="border-b pb-3 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i> Estimación de Valor de Mercado para el Inmueble Tasable
+                            </h3>
+                            <p class="text-xs text-slate-500">Inferencia puntual, Intervalo de Confianza al 80% (NBR 14653-2) con t exacta y Campo de Arbitrio (±15%).</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-center">
+                            <span class="text-[10px] font-bold text-indigo-900 uppercase block mb-1">Valor Central Estimado</span>
+                            <span class="text-xl font-extrabold text-indigo-700 font-mono-code" id="valCentralEst">UM 0,00</span>
+                            <span class="text-[11px] text-slate-600 block mt-0.5 font-mono-code" id="valCentralUnitEst">0,00 UM/m²</span>
+                        </div>
+
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold text-emerald-900 uppercase">Intervalo Confianza 80%</span>
+                                <span id="txtPrecGrade" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-200 text-emerald-900">Grado III</span>
+                            </div>
+                            <span class="text-base font-bold text-emerald-800 font-mono-code" id="valIC80Range">[0,00 - 0,00]</span>
+                            <span class="text-[11px] text-emerald-700 font-semibold block mt-0.5 font-mono-code" id="valIC80Amp">Amplitud: 0,00%</span>
+                        </div>
+
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+                            <span class="text-[10px] font-bold text-amber-900 uppercase block mb-1">Campo de Arbitrio (±15%)</span>
+                            <span class="text-base font-bold text-amber-800 font-mono-code" id="valArbitrioRange">[0,00 - 0,00]</span>
+                            <span class="text-[11px] text-amber-700 block mt-0.5">Rango Normativo</span>
+                        </div>
+
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 text-center">
+                            <span class="text-[10px] font-bold text-emerald-400 uppercase block mb-1">Intervalo Admisible Final</span>
+                            <span class="text-base font-bold text-emerald-300 font-mono-code" id="valAdmissibleRange">[0,00 - 0,00]</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">I.C. 80% ∩ Arbitrio</span>
+                        </div>
+                    </div>
+
+                    <!-- Vector de Atributos -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase">Atributos del Inmueble Tasable (Último Registro de la Muestra)</h4>
+                            <span id="extrapolationAlert" class="hidden text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Extrapolación Detectada
+                            </span>
+                        </div>
+                        <div id="targetInputsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs"></div>
+                        <div class="mt-4 flex justify-end">
+                            <button id="btnRecalcTarget" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow cursor-pointer">
+                                <i class="fa-solid fa-arrows-rotate mr-1"></i> Recalcular Valor del Inmueble
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Global -->
+    <footer class="bg-[#0A1B2E] text-slate-400 py-6 border-t border-slate-800 text-xs font-mono-code">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
+            <div>
+                <p class="text-slate-300 font-semibold">EconometricVal Pro • v2.2</p>
+                <p class="text-[11px] text-slate-500">Modelado Econométrico Inmobiliario y Diagnóstico bajo Norma ABNT NBR 14653-2.</p>
+            </div>
+            <a href="https://paypal.me/spilimcurso" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1.5">
+                <i class="fa-brands fa-paypal"></i> Donar al Proyecto: paypal.me/spilimcurso
+            </a>
+        </div>
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- MOTOR ECONOMÉTRICO & CONTROLADORES JAVASCRIPT REVISADOS   -->
+    <!-- ========================================================= -->
+    <script>
+        function formatNum(val, dec = 2) {
+            if (val === null || val === undefined || isNaN(val)) return '0,00';
+            return Number(val).toLocaleString('de-DE', {
+                minimumFractionDigits: dec,
+                maximumFractionDigits: dec
+            });
+        }
+
+        function parseCleanFloat(strVal) {
+            if (strVal === null || strVal === undefined) return 0;
+            if (typeof strVal === 'number') return strVal;
+            const cleaned = String(strVal).trim().replace(/\s/g, '').replace(',', '.');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function domId(name) {
+            return 'v_' + String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
+
+        // Muestra de Panamá (Camacaro Pérez & Mock Díaz, 2021)
+        var PANAMA_BOOK_SAMPLE = [
+            { Ac: 75, Pe: 1, Ed: 5, Ca: 2, Pi: 20, DPV: 950, PT: 155000, PU: 2066.67, Ha: 2, Ba: 2, Ev: 1 },
+            { Ac: 80, Pe: 1, Ed: 4, Ca: 2, Pi: 24, DPV: 1200, PT: 165000, PU: 2062.50, Ha: 2, Ba: 2, Ev: 1 },
+            { Ac: 120, Pe: 2, Ed: 3, Ca: 3, Pi: 35, DPV: 600, PT: 245000, PU: 2041.67, Ha: 3, Ba: 3, Ev: 1 },
+            { Ac: 68, Pe: 1, Ed: 8, Ca: 1, Pi: 15, DPV: 1800, PT: 135000, PU: 1985.29, Ha: 2, Ba: 1, Ev: 0 },
+            { Ac: 95, Pe: 2, Ed: 2, Ca: 3, Pi: 30, DPV: 750, PT: 210000, PU: 2210.53, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 110, Pe: 2, Ed: 6, Ca: 2, Pi: 22, DPV: 1300, PT: 205000, PU: 1863.64, Ha: 3, Ba: 2, Ev: 0 },
+            { Ac: 85, Pe: 1, Ed: 7, Ca: 2, Pi: 18, DPV: 1450, PT: 160000, PU: 1882.35, Ha: 2, Ba: 2, Ev: 1 },
+            { Ac: 130, Pe: 2, Ed: 2, Ca: 3, Pi: 38, DPV: 500, PT: 255000, PU: 1961.54, Ha: 4, Ba: 3, Ev: 1 },
+            { Ac: 70, Pe: 1, Ed: 10, Ca: 1, Pi: 12, DPV: 2100, PT: 130000, PU: 1857.14, Ha: 2, Ba: 1, Ev: 0 },
+            { Ac: 92, Pe: 1, Ed: 3, Ca: 2, Pi: 26, DPV: 850, PT: 195000, PU: 2119.57, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 88, Pe: 1, Ed: 5, Ca: 2, Pi: 25, DPV: 1050, PT: 175000, PU: 1988.64, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 102, Pe: 2, Ed: 4, Ca: 3, Pi: 32, DPV: 700, PT: 225000, PU: 2205.88, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 78, Pe: 1, Ed: 9, Ca: 1, Pi: 14, DPV: 1900, PT: 142000, PU: 1820.51, Ha: 2, Ba: 2, Ev: 0 },
+            { Ac: 115, Pe: 2, Ed: 2, Ca: 3, Pi: 36, DPV: 550, PT: 240000, PU: 2086.96, Ha: 3, Ba: 3, Ev: 1 },
+            { Ac: 82, Pe: 1, Ed: 6, Ca: 2, Pi: 20, DPV: 1250, PT: 168000, PU: 2048.78, Ha: 2, Ba: 2, Ev: 0 },
+            { Ac: 98, Pe: 2, Ed: 3, Ca: 2, Pi: 28, DPV: 800, PT: 200000, PU: 2040.82, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 67, Pe: 1, Ed: 12, Ca: 1, Pi: 10, DPV: 2200, PT: 128000, PU: 1910.45, Ha: 2, Ba: 1, Ev: 0 },
+            { Ac: 90, Pe: 1, Ed: 4, Ca: 2, Pi: 24, DPV: 1150, PT: 182000, PU: 2022.22, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 125, Pe: 2, Ed: 1, Ca: 3, Pi: 38, DPV: 450, PT: 252000, PU: 2016.00, Ha: 4, Ba: 3, Ev: 1 },
+            { Ac: 73, Pe: 1, Ed: 8, Ca: 2, Pi: 16, DPV: 1600, PT: 148000, PU: 2027.40, Ha: 2, Ba: 2, Ev: 0 },
+            { Ac: 86, Pe: 1, Ed: 5, Ca: 2, Pi: 22, DPV: 1100, PT: 172000, PU: 2000.00, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 105, Pe: 2, Ed: 3, Ca: 3, Pi: 30, DPV: 650, PT: 230000, PU: 2190.48, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 94, Pe: 2, Ed: 4, Ca: 2, Pi: 27, DPV: 900, PT: 198000, PU: 2106.38, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 80, Pe: 1, Ed: 7, Ca: 1, Pi: 18, DPV: 1500, PT: 158000, PU: 1975.00, Ha: 2, Ba: 2, Ev: 0 },
+            { Ac: 118, Pe: 2, Ed: 2, Ca: 3, Pi: 34, DPV: 580, PT: 242000, PU: 2050.85, Ha: 3, Ba: 3, Ev: 1 },
+            { Ac: 89, Pe: 1, Ed: 3, Ca: 2, Pi: 26, DPV: 1000, PT: 185000, PU: 2078.65, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 72, Pe: 1, Ed: 11, Ca: 1, Pi: 11, DPV: 2150, PT: 132000, PU: 1833.33, Ha: 2, Ba: 1, Ev: 0 },
+            { Ac: 96, Pe: 2, Ed: 5, Ca: 2, Pi: 29, DPV: 820, PT: 196000, PU: 2041.67, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 108, Pe: 2, Ed: 2, Ca: 3, Pi: 33, DPV: 620, PT: 235000, PU: 2175.93, Ha: 3, Ba: 2, Ev: 1 },
+            { Ac: 90, Pe: 1, Ed: 2, Ca: 2, Pi: 28, DPV: 1100, PT: 188000, PU: 2088.89, Ha: 3, Ba: 2, Ev: 1 } // Inmueble Tasable
+        ];
+
+        var rawMasterData = [];
+        var availableColumns = [];
+        var activeModelResult = null;
+        var chartInstances = {};
+        var candidateModels = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            setupEventListeners();
+        });
+
+        function initTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('active', 'text-indigo-600', 'font-bold');
+                        b.classList.add('text-slate-500');
+                    });
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                    
+                    btn.classList.add('active', 'text-indigo-600', 'font-bold');
+                    btn.classList.remove('text-slate-500');
+                    const targetTab = btn.getAttribute('data-tab');
+                    const targetEl = document.getElementById(targetTab);
+                    if (targetEl) targetEl.classList.remove('hidden');
+
+                    if (targetTab === 'tab-diagnostics') {
+                        renderDiagnosticsCharts();
+                    } else if (targetTab === 'tab-scatters') {
+                        renderScatterPlots();
+                    } else if (targetTab === 'tab-correlations') {
+                        renderCorrelationMatrix();
+                    } else if (targetTab === 'tab-valuation') {
+                        buildValuationInputs();
+                    }
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            document.getElementById('btnLoadBookData').addEventListener('click', () => {
+                loadMasterDataset(PANAMA_BOOK_SAMPLE, 'Camacaro_Mock_Panama.xlsx');
+            });
+            document.getElementById('btnClearData').addEventListener('click', resetApp);
+            document.getElementById('selectDepVar').addEventListener('change', updatePredictorCheckboxes);
+            document.getElementById('btnSelectAllPreds').addEventListener('click', () => {
+                document.querySelectorAll('input[name="predCheckbox"]').forEach(cb => cb.checked = true);
+            });
+            document.getElementById('btnUnselectAllPreds').addEventListener('click', () => {
+                document.querySelectorAll('input[name="predCheckbox"]').forEach(cb => cb.checked = false);
+            });
+            document.getElementById('btnRunRegression').addEventListener('click', () => runActiveModel(true));
+            document.getElementById('btnRandomizeScales').addEventListener('click', randomizeIndependentScales);
+            document.getElementById('btnMonteCarloSearch').addEventListener('click', runMonteCarloModelSearch);
+            document.getElementById('btnRecalcTarget').addEventListener('click', evaluateTargetProperty);
+
+            ['selCaracterizacion', 'selIdentificacion'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', () => { if (activeModelResult) renderNBRCompliance(activeModelResult); });
+            });
+
+            document.getElementById('btnEnableAllRows').addEventListener('click', () => {
+                rawMasterData.forEach(r => r._active = true);
+                renderDataTable();
+                runActiveModel(false);
+            });
+            document.getElementById('btnDisableOutliers').addEventListener('click', () => {
+                if (!activeModelResult) return;
+                const outliersIdxs = activeModelResult.outliersIndices;
+                outliersIdxs.forEach(idx => {
+                    if (rawMasterData[idx]) rawMasterData[idx]._active = false;
+                });
+                renderDataTable();
+                runActiveModel(true);
+            });
+        }
+
+        function loadPanamaDatasetAndGo() {
+            loadMasterDataset(PANAMA_BOOK_SAMPLE, 'Camacaro_Mock_Panama.xlsx');
+            window.location.hash = 'app';
+        }
+
+        function loadMasterDataset(data, name) {
+            rawMasterData = data.map((row, i) => {
+                const item = { ...row, _id: i + 1, _active: true };
+                const areaKey = Object.keys(item).find(k => /^(ac|area|at|sup|superficie)$/i.test(k));
+                const acVal = areaKey ? parseFloat(item[areaKey]) : null;
+
+                if (acVal && item.PT && !item.PU) item.PU = parseFloat((item.PT / acVal).toFixed(2));
+                if (acVal && item.PU && !item.PT) item.PT = parseFloat((item.PU * acVal).toFixed(2));
+                return item;
+            });
+
+            availableColumns = Object.keys(rawMasterData[0]).filter(k => !k.startsWith('_'));
+            document.getElementById('datasetName').textContent = name;
+            
+            const selectDep = document.getElementById('selectDepVar');
+            selectDep.innerHTML = '<option value="">Seleccionar...</option>';
+            availableColumns.forEach(col => {
+                const opt = document.createElement('option');
+                opt.value = col;
+                opt.textContent = col;
+                if (col.toLowerCase() === 'pt') opt.selected = true;
+                selectDep.appendChild(opt);
+            });
+
+            updatePredictorCheckboxes();
+            renderDataTable();
+            runActiveModel(false);
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                let workbook, json;
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    workbook = XLSX.read(data, { type: 'array' });
+                    json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                } catch (err) {
+                    alert('No se pudo leer el archivo. Verifique que sea un .xlsx, .xls o .csv válido.');
+                    return;
+                }
+                if (!json || json.length === 0) return alert('Archivo sin datos legibles.');
+
+                const notices = [];
+                let sliceData = json;
+                if (sliceData.length > 150) {
+                    notices.push(`Se truncó la muestra a los primeros 150 registros (el archivo tenía ${sliceData.length}).`);
+                    sliceData = sliceData.slice(0, 150);
+                }
+
+                const allCols = Object.keys(sliceData[0] || {});
+                if (allCols.length > 15) {
+                    notices.push(`Se conservaron solo las primeras 15 columnas de ${allCols.length} detectadas.`);
+                    const keepCols = allCols.slice(0, 15);
+                    sliceData = sliceData.map(row => {
+                        const trimmed = {};
+                        keepCols.forEach(c => { trimmed[c] = row[c]; });
+                        return trimmed;
+                    });
+                }
+
+                if (notices.length) alert(notices.join('\n'));
+                loadMasterDataset(sliceData, file.name);
+            };
+            reader.onerror = () => alert('Error al leer el archivo del disco.');
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updatePredictorCheckboxes() {
+            const depVar = document.getElementById('selectDepVar').value;
+            const container = document.getElementById('independentVarsContainer');
+            container.innerHTML = '';
+
+            const predictors = availableColumns.filter(c => c !== depVar && c !== 'PU' && c !== 'PT');
+            predictors.forEach(pred => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-white p-1.5 rounded-lg border border-slate-200';
+                div.innerHTML = `
+                    <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-700 text-[11px]">
+                        <input type="checkbox" name="predCheckbox" value="${escapeHtml(pred)}" checked class="rounded text-indigo-600">
+                        <span>${escapeHtml(pred)}</span>
+                    </label>
+                    <select id="${domId('transf_' + pred)}" class="text-[10px] bg-slate-50 border border-slate-300 rounded px-1 py-0.5">
+                        <option value="linear" selected>x</option>
+                        <option value="ln">ln(x)</option>
+                        <option value="inv">1/x</option>
+                        <option value="sqrt">√x</option>
+                        <option value="sqr">x²</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderDataTable() {
+            const theadRow = document.getElementById('sampleDataTheadRow');
+            const tbody = document.getElementById('sampleDataTbody');
+            theadRow.innerHTML = '<th class="p-2 text-center">Activo</th><th class="p-2">#</th><th class="p-2 text-center">Outlier</th>'
+                + availableColumns.map(c => `<th class="p-2">${escapeHtml(c)}</th>`).join('');
+
+            const frag = document.createDocumentFragment();
+            rawMasterData.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                const isOutlier = activeModelResult && activeModelResult.outliersIndices.includes(idx);
+                tr.className = !row._active ? 'bg-slate-100 text-slate-400 opacity-60' : (isOutlier ? 'bg-rose-50/70 hover:bg-rose-50' : 'hover:bg-slate-50');
+                
+                let cells = `
+                    <td class="p-1.5 text-center">
+                        <input type="checkbox" ${row._active ? 'checked' : ''} onchange="toggleRowActive(${idx})" class="rounded text-indigo-600 cursor-pointer">
+                    </td>
+                    <td class="p-1.5 font-bold">${row._id}</td>
+                    <td class="p-1.5 text-center">
+                        ${isOutlier ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 text-white">OUTLIER</span>' : '<span class="text-slate-400">-</span>'}
+                    </td>
+                `;
+                availableColumns.forEach(col => {
+                    const val = row[col];
+                    cells += `<td class="p-1.5">${typeof val === 'number' ? formatNum(val, 2) : (val !== undefined ? escapeHtml(val) : '-')}</td>`;
+                });
+                tr.innerHTML = cells;
+                frag.appendChild(tr);
+            });
+            tbody.innerHTML = '';
+            tbody.appendChild(frag);
+
+            const activeCount = rawMasterData.filter(r => r._active).length;
+            document.getElementById('dataCountBadge').textContent = `${activeCount} / ${rawMasterData.length} activos`;
+        }
+
+        window.toggleRowActive = function(idx) {
+            if (rawMasterData[idx]) {
+                rawMasterData[idx]._active = !rawMasterData[idx]._active;
+                renderDataTable();
+                runActiveModel(false);
+            }
+        };
+
+        function applyTransf(val, type) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return 0;
+            switch(type) {
+                case 'ln': return num > 0 ? Math.log(num) : 0;
+                case 'inv': return num !== 0 ? 1 / num : 0;
+                case 'sqrt': return num >= 0 ? Math.sqrt(num) : 0;
+                case 'sqr': return num * num;
+                default: return num;
+            }
+        }
+
+        function invTransf(val, type) {
+            switch(type) {
+                case 'ln': return Math.exp(val);
+                case 'inv': return val !== 0 ? 1 / val : 0;
+                case 'sqrt': return val * val;
+                case 'sqr': return val >= 0 ? Math.sqrt(val) : 0;
+                default: return val;
+            }
+        }
+
+        function matrixTranspose(A) { return A[0].map((_, c) => A.map(r => r[c])); }
+        function matrixMultiply(A, B) {
+            const rA = A.length, cA = A[0].length, rB = B.length, cB = B[0].length;
+            let out = Array(rA).fill(0).map(() => Array(cB).fill(0));
+            for (let i = 0; i < rA; i++) {
+                for (let j = 0; j < cB; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < cA; k++) sum += A[i][k] * B[k][j];
+                    out[i][j] = sum;
+                }
+            }
+            return out;
+        }
+
+        function invertSymmetricMatrix(A) {
+            const n = A.length;
+            let I = Array(n).fill(0).map((_, i) => Array(n).fill(0).map((_, j) => (i === j ? 1 : 0)));
+            let M = A.map(row => [...row]);
+
+            for (let i = 0; i < n; i++) {
+                let maxRow = i;
+                let maxVal = Math.abs(M[i][i]);
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(M[k][i]) > maxVal) {
+                        maxVal = Math.abs(M[k][i]);
+                        maxRow = k;
+                    }
+                }
+
+                if (maxVal < 1e-22) return null;
+
+                if (maxRow !== i) {
+                    [M[i], M[maxRow]] = [M[maxRow], M[i]];
+                    [I[i], I[maxRow]] = [I[maxRow], I[i]];
+                }
+
+                let pivot = M[i][i];
+                for (let j = 0; j < n; j++) {
+                    M[i][j] /= pivot;
+                    I[i][j] /= pivot;
+                }
+
+                for (let k = 0; k < n; k++) {
+                    if (k !== i) {
+                        let factor = M[k][i];
+                        for (let j = 0; j < n; j++) {
+                            M[k][j] -= factor * M[i][j];
+                            I[k][j] -= factor * I[i][j];
+                        }
+                    }
+                }
+            }
+            return I;
+        }
+
+        function estimateOLS(depVar, transfDep, predConfig, dataset) {
+            const requiredCols = [depVar, ...predConfig.map(p => p.name)];
+            const candidateRows = dataset.filter(r => r._active !== false);
+            const activeData = candidateRows.filter(r =>
+                requiredCols.every(col => !isNaN(parseFloat(r[col])))
+            );
+            const invalidCount = candidateRows.length - activeData.length;
+
+            const n = activeData.length;
+            const k = predConfig.length;
+            if (n <= k + 1) return null;
+
+            let Y_mat = [], X_mat = [], orig_Y = [], transf_X_cols = {}, orig_X_cols = [];
+            predConfig.forEach(p => { transf_X_cols[p.name] = []; });
+
+            for (let i = 0; i < n; i++) {
+                const rawY = parseFloat(activeData[i][depVar]);
+                orig_Y.push(rawY);
+                const tY = applyTransf(rawY, transfDep);
+                Y_mat.push([tY]);
+
+                let rowX = [1.0];
+                let rowOrigX = {};
+                predConfig.forEach(p => {
+                    const rawX = parseFloat(activeData[i][p.name]);
+                    rowOrigX[p.name] = rawX;
+                    const tX = applyTransf(rawX, p.transf);
+                    transf_X_cols[p.name].push(tX);
+                    rowX.push(tX);
+                });
+                orig_X_cols.push(rowOrigX);
+                X_mat.push(rowX);
+            }
+
+            const pCount = k + 1;
+            let colScales = [];
+            for (let j = 0; j < pCount; j++) {
+                let sumSq = 0;
+                for (let i = 0; i < n; i++) sumSq += Math.pow(X_mat[i][j], 2);
+                let scale = Math.sqrt(sumSq);
+                if (scale < 1e-12) scale = 1.0;
+                colScales.push(scale);
+            }
+
+            let Z_mat = Array(n).fill(0).map(() => Array(pCount).fill(0));
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < pCount; j++) {
+                    Z_mat[i][j] = X_mat[i][j] / colScales[j];
+                }
+            }
+
+            const Zt = matrixTranspose(Z_mat);
+            const ZtZ = matrixMultiply(Zt, Z_mat);
+            const invZtZ = invertSymmetricMatrix(ZtZ);
+            if (!invZtZ) return null;
+
+            let invXtX = Array(pCount).fill(0).map(() => Array(pCount).fill(0));
+            for (let i = 0; i < pCount; i++) {
+                for (let j = 0; j < pCount; j++) {
+                    invXtX[i][j] = invZtZ[i][j] / (colScales[i] * colScales[j]);
+                }
+            }
+
+            const Xt = matrixTranspose(X_mat);
+            const XtY = matrixMultiply(Xt, Y_mat);
+            const Beta = matrixMultiply(invXtX, XtY);
+
+            const Y_hat = matrixMultiply(X_mat, Beta);
+            let residuals = [], sumSqRes = 0, sumY = 0;
+            for (let i = 0; i < n; i++) {
+                const res = Y_mat[i][0] - Y_hat[i][0];
+                residuals.push(res);
+                sumSqRes += res * res;
+                sumY += Y_mat[i][0];
+            }
+
+            const meanY = sumY / n;
+            let sumSqTotal = 0;
+            for (let i = 0; i < n; i++) sumSqTotal += Math.pow(Y_mat[i][0] - meanY, 2);
+            const sumSqExp = Math.max(0, sumSqTotal - sumSqRes);
+            const dfRes = n - k - 1;
+            const dfMod = k;
+            const varModel = dfRes > 0 ? (sumSqRes / dfRes) : 0;
+            const seModel = Math.sqrt(varModel);
+
+            const qmExp = dfMod > 0 ? (sumSqExp / dfMod) : 0;
+            const qmRes = dfRes > 0 ? (sumSqRes / dfRes) : 0;
+
+            const R2 = sumSqTotal > 0 ? (sumSqExp / sumSqTotal) : 0;
+            const R2_adj = dfRes > 0 ? (1 - (1 - R2) * ((n - 1) / dfRes)) : 0;
+            const r_corr = Math.sqrt(Math.max(0, R2));
+
+            const F_calc = qmRes > 0 ? (qmExp / qmRes) : 0;
+            const p_val_F = calcExactFSignificance(F_calc, dfMod, dfRes);
+
+            const AIC = n * Math.log(Math.max(1e-12, sumSqRes / n)) + 2 * (k + 1);
+            const AICc = (n - k - 2) > 0 ? (AIC + (2 * (k + 1) * (k + 2)) / (n - k - 2)) : AIC;
+            const SC = n * Math.log(Math.max(1e-12, sumSqRes / n)) + (k + 1) * Math.log(n);
+
+            let dw_num = 0;
+            for (let i = 1; i < n; i++) dw_num += Math.pow(residuals[i] - residuals[i - 1], 2);
+            const durbinWatson = sumSqRes > 0 ? (dw_num / sumSqRes) : 2.0;
+
+            let coefDetails = [];
+            for (let j = 0; j <= k; j++) {
+                const se_b = Math.sqrt(Math.max(0, varModel * invXtX[j][j]));
+                const t_stat = se_b > 0 ? (Beta[j][0] / se_b) : 0;
+                const p_val_t = calcExactTProbBilateral(Math.abs(t_stat), dfRes);
+                
+                let vif = 1.0;
+                if (j > 0 && k > 1) {
+                    const colMean = transf_X_cols[predConfig[j-1].name].reduce((a,b)=>a+b,0)/n;
+                    const ss_col = transf_X_cols[predConfig[j-1].name].reduce((a,b)=>a+Math.pow(b-colMean,2),0);
+                    vif = Math.max(1.0, invXtX[j][j] * ss_col);
+                }
+                coefDetails.push({
+                    name: j === 0 ? 'Constante (b₀)' : predConfig[j - 1].name,
+                    transf: j === 0 ? '-' : predConfig[j - 1].transf,
+                    b: Beta[j][0],
+                    se: se_b,
+                    t: t_stat,
+                    p_val: p_val_t,
+                    vif: j === 0 ? '-' : formatNum(vif, 2)
+                });
+            }
+
+            let cookDistances = [], maxCook = 0, cookAlerts = 0;
+            const cookCutLine = 1.00;
+            for (let i = 0; i < n; i++) {
+                const xi = [X_mat[i]];
+                const xi_t = matrixTranspose(xi);
+                const hii = matrixMultiply(matrixMultiply(xi, invXtX), xi_t)[0][0];
+                const ei = residuals[i];
+                const di = (varModel > 0 && Math.abs(1 - hii) > 1e-12) ? ((Math.pow(ei, 2) / ((k + 1) * varModel)) * (hii / Math.pow(1 - hii, 2))) : 0;
+                cookDistances.push(di);
+                if (di > maxCook) maxCook = di;
+                if (di > cookCutLine) cookAlerts++;
+            }
+
+            let stdResiduals = [];
+            let outliersIndices = [];
+            let normBands = { b1: 0, b2: 0, b3: 0 };
+            for (let i = 0; i < n; i++) {
+                const stdR = seModel > 0 ? (residuals[i] / seModel) : 0;
+                stdResiduals.push(stdR);
+                if (Math.abs(stdR) > 2.0) outliersIndices.push(i);
+                if (Math.abs(stdR) <= 1.0) normBands.b1++;
+                if (Math.abs(stdR) <= 1.64) normBands.b2++;
+                if (Math.abs(stdR) <= 1.96) normBands.b3++;
+            }
+
+            const m2 = sumSqRes / n;
+            let sumE3 = 0, sumE4 = 0;
+            for (let i = 0; i < n; i++) {
+                sumE3 += Math.pow(residuals[i], 3);
+                sumE4 += Math.pow(residuals[i], 4);
+            }
+            const skewness = m2 > 0 ? ((sumE3 / n) / Math.pow(m2, 1.5)) : 0;
+            const kurtosis = m2 > 0 ? ((sumE4 / n) / Math.pow(m2, 2)) : 3;
+            const stat_JB = (n / 6) * (Math.pow(skewness, 2) + Math.pow(kurtosis - 3, 2) / 4);
+            const p_val_JB = Math.exp(-stat_JB / 2);
+
+            let e2_vec = residuals.map(e => [e * e]);
+            const Xt_e2 = matrixMultiply(Xt, e2_vec);
+            const Beta_aux = matrixMultiply(invXtX, Xt_e2);
+            const e2_hat = matrixMultiply(X_mat, Beta_aux);
+            const meanE2 = e2_vec.reduce((a,b)=>a+b[0],0)/n;
+            let ssTot_aux = 0, ssRes_aux = 0;
+            for (let i = 0; i < n; i++) {
+                ssTot_aux += Math.pow(e2_vec[i][0] - meanE2, 2);
+                ssRes_aux += Math.pow(e2_vec[i][0] - e2_hat[i][0], 2);
+            }
+            const R2_aux = ssTot_aux > 0 ? Math.max(0, 1 - ssRes_aux / ssTot_aux) : 0;
+            const stat_BP = n * R2_aux;
+            const p_val_BP = calcChiSqProb(stat_BP, k);
+
+            return {
+                depVar, transfDep, predConfig, n, k, dfMod, dfRes, totalN: dataset.length, invalidCount,
+                Beta, Y_mat, Y_hat, orig_Y, residuals, stdResiduals, varModel, seModel,
+                sumSqExp, sumSqRes, sumSqTotal, qmExp, qmRes,
+                R2, R2_adj, r_corr, F_calc, p_val_F, durbinWatson,
+                AIC, AICc, SC, coefDetails, invXtX,
+                cookDistances, maxCook, cookAlerts, cookCutLine,
+                outliersIndices,
+                normBands: {
+                    b1: (normBands.b1 / n) * 100,
+                    b2: (normBands.b2 / n) * 100,
+                    b3: (normBands.b3 / n) * 100
+                },
+                stat_JB, p_val_JB, skewness, kurtosis,
+                stat_BP, p_val_BP,
+                transf_X_cols, orig_X_cols
+            };
+        }
+
+        function logGamma(z) {
+            const cof = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.001208650973866179, -5.395239384953e-6];
+            let x = z, y = z, tmp = x + 5.5;
+            tmp -= (x + 0.5) * Math.log(tmp);
+            let ser = 1.000000000190015;
+            for (let j = 0; j <= 5; j++) ser += cof[j] / ++y;
+            return -tmp + Math.log(2.5066282746310005 * ser / x);
+        }
+
+        function betaContinuedFraction(x, a, b) {
+            const MAXIT = 200, EPS = 1e-15, FPMIN = 1e-30;
+            const qab = a + b, qap = a + 1, qam = a - 1;
+            let c = 1.0, d = 1.0 - qab * x / qap;
+            if (Math.abs(d) < FPMIN) d = FPMIN;
+            d = 1.0 / d;
+            let h = d;
+            for (let m = 1; m <= MAXIT; m++) {
+                const m2 = 2 * m;
+                let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+                d = 1.0 + aa * d;
+                if (Math.abs(d) < FPMIN) d = FPMIN;
+                c = 1.0 + aa / c;
+                if (Math.abs(c) < FPMIN) c = FPMIN;
+                d = 1.0 / d;
+                h *= d * c;
+                aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+                d = 1.0 + aa * d;
+                if (Math.abs(d) < FPMIN) d = FPMIN;
+                c = 1.0 + aa / c;
+                if (Math.abs(c) < FPMIN) c = FPMIN;
+                d = 1.0 / d;
+                const del = d * c;
+                h *= del;
+                if (Math.abs(del - 1.0) <= EPS) break;
+            }
+            return h;
+        }
+
+        function incBeta(x, a, b) {
+            if (x <= 0) return 0;
+            if (x >= 1) return 1;
+            const lbeta = logGamma(a) + logGamma(b) - logGamma(a + b);
+            const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta);
+            if (x < (a + 1) / (a + b + 2)) {
+                return front * betaContinuedFraction(x, a, b) / a;
+            } else {
+                return 1 - front * betaContinuedFraction(1 - x, b, a) / b;
+            }
+        }
+
+        function calcExactFSignificance(f, df1, df2) {
+            if (f <= 0 || isNaN(f) || df1 <= 0 || df2 <= 0) return 1.0;
+            const x = df2 / (df2 + df1 * f);
+            const p = incBeta(x, df2 / 2, df1 / 2);
+            return Math.max(0.00000001, Math.min(1.0, p));
+        }
+
+        function calcExactTProbBilateral(t, df) {
+            if (isNaN(t) || df <= 0) return 1.0;
+            const x = df / (df + t * t);
+            const p = incBeta(x, df / 2, 0.5);
+            return Math.max(0.00000001, Math.min(1.0, p));
+        }
+
+        function gammaIncSeries(x, a) {
+            if (x <= 0) return 0;
+            let ap = a, sum = 1 / a, del = sum;
+            for (let n = 1; n <= 300; n++) {
+                ap += 1;
+                del *= x / ap;
+                sum += del;
+                if (Math.abs(del) < Math.abs(sum) * 1e-15) break;
+            }
+            return sum * Math.exp(-x + a * Math.log(x) - logGamma(a));
+        }
+
+        function gammaIncContinuedFraction(x, a) {
+            const FPMIN = 1e-300, EPS = 1e-15;
+            let b = x + 1 - a, c = 1 / FPMIN, d = 1 / b, h = d;
+            for (let i = 1; i <= 300; i++) {
+                const an = -i * (i - a);
+                b += 2;
+                d = an * d + b; if (Math.abs(d) < FPMIN) d = FPMIN;
+                c = b + an / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+                d = 1 / d;
+                const del = d * c;
+                h *= del;
+                if (Math.abs(del - 1.0) < EPS) break;
+            }
+            return Math.exp(-x + a * Math.log(x) - logGamma(a)) * h;
+        }
+
+        function regularizedGammaP(a, x) {
+            if (x <= 0 || a <= 0) return 0;
+            if (x < a + 1) return gammaIncSeries(x, a);
+            return 1 - gammaIncContinuedFraction(x, a);
+        }
+
+        function calcChiSqProb(x, df) {
+            if (x <= 0 || isNaN(x) || df <= 0) return 1.0;
+            const cdf = regularizedGammaP(df / 2, x / 2);
+            return Math.max(0.00000001, Math.min(1.0, 1 - cdf));
+        }
+
+        function tQuantile(confidence, df) {
+            const targetP = 1 - confidence;
+            if (!df || df <= 0) return 1.282;
+            let lo = 0, hi = 60;
+            for (let iter = 0; iter < 80; iter++) {
+                const mid = (lo + hi) / 2;
+                const p = calcExactTProbBilateral(mid, df);
+                if (p > targetP) lo = mid; else hi = mid;
+            }
+            return (lo + hi) / 2;
+        }
+
+        function randomizeIndependentScales() {
+            const scales = ['linear', 'ln', 'inv', 'sqrt', 'sqr'];
+            const selectDep = document.getElementById('transfDepVar');
+            selectDep.value = scales[Math.floor(Math.random() * 4)];
+
+            document.querySelectorAll('input[name="predCheckbox"]:checked').forEach(cb => {
+                const el = document.getElementById(domId('transf_' + cb.value));
+                if (el) el.value = scales[Math.floor(Math.random() * scales.length)];
+            });
+
+            runActiveModel(true);
+        }
+
+        function runMonteCarloModelSearch() {
+            const depVar = document.getElementById('selectDepVar').value;
+            const checkedBoxes = Array.from(document.querySelectorAll('input[name="predCheckbox"]:checked'));
+            if (!depVar || checkedBoxes.length === 0) return;
+
+            const btn = document.getElementById('btnMonteCarloSearch');
+            const originalLabel = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-wait');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Explorando 150 modelos...';
+
+            setTimeout(() => {
+                candidateModels = [];
+                const scalesDep = ['linear', 'ln', 'inv', 'sqrt'];
+                const scalesPred = ['linear', 'ln', 'inv', 'sqrt', 'sqr'];
+
+                for (let i = 0; i < 150; i++) {
+                    const tDep = scalesDep[Math.floor(Math.random() * scalesDep.length)];
+                    const cfg = checkedBoxes.map(cb => ({
+                        name: cb.value,
+                        transf: scalesPred[Math.floor(Math.random() * scalesPred.length)]
+                    }));
+
+                    const res = estimateOLS(depVar, tDep, cfg, rawMasterData);
+                    if (res) {
+                        const maxP = Math.max(...res.coefDetails.slice(1).map(c => c.p_val));
+                        candidateModels.push({
+                            id: i + 1,
+                            label: `${tDep}(${depVar}) ~ ` + cfg.map(p => `${p.transf}(${p.name})`).join(' + '),
+                            transfDep: tDep,
+                            predConfig: cfg,
+                            R2_adj: res.R2_adj,
+                            AIC: res.AIC,
+                            p_val_F: res.p_val_F,
+                            maxP: maxP,
+                            result: res
+                        });
+                    }
+                }
+
+                candidateModels.sort((a, b) => b.R2_adj - a.R2_adj || a.AIC - b.AIC);
+
+                const tbody = document.getElementById('modelsComparisonTbody');
+                const frag = document.createDocumentFragment();
+                candidateModels.slice(0, 15).forEach((m, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = idx === 0 ? 'bg-indigo-50/70 font-semibold' : 'hover:bg-slate-50';
+                    tr.innerHTML = `
+                        <td class="p-2 font-bold font-mono-code">${m.id} ${idx === 0 ? '<span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full">Mejor</span>' : ''}</td>
+                        <td class="p-2 font-mono-code text-indigo-900 text-[10px] truncate max-w-[320px]">${escapeHtml(m.label)}</td>
+                        <td class="p-2 text-right font-mono-code font-bold">${formatNum(m.R2_adj * 100, 2)}%</td>
+                        <td class="p-2 text-right font-mono-code">${formatNum(m.AIC, 2)}</td>
+                        <td class="p-2 text-right font-mono-code text-emerald-700 font-bold">${formatNum(m.p_val_F * 100, 2)}%</td>
+                        <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${m.maxP <= 0.10 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${m.maxP <= 0.10 ? 'Grado III' : 'Grado II/I'}</span></td>
+                        <td class="p-2 text-center">
+                            <button onclick="adoptModel(${m.id})" class="text-[11px] bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded-lg shadow cursor-pointer font-medium">
+                                Adoptar
+                            </button>
+                        </td>
+                    `;
+                    frag.appendChild(tr);
+                });
+                tbody.innerHTML = '';
+                tbody.appendChild(frag);
+
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-wait');
+                btn.innerHTML = originalLabel;
+
+                document.querySelector('.tab-btn[data-tab="tab-comparison"]').click();
+            }, 30);
+        }
+
+        window.adoptModel = function(id) {
+            const selected = candidateModels.find(m => m.id === id);
+            if (!selected) return;
+
+            document.getElementById('transfDepVar').value = selected.transfDep;
+            
+            const activePredNames = selected.predConfig.map(p => p.name);
+            document.querySelectorAll('input[name="predCheckbox"]').forEach(cb => {
+                cb.checked = activePredNames.includes(cb.value);
+            });
+
+            selected.predConfig.forEach(p => {
+                const el = document.getElementById(domId('transf_' + p.name));
+                if (el) el.value = p.transf;
+            });
+
+            runActiveModel(false);
+            document.querySelector('.tab-btn[data-tab="tab-model"]').click();
+        };
+
+        function runActiveModel(showNotification = true) {
+            const depVar = document.getElementById('selectDepVar').value;
+            const transfDep = document.getElementById('transfDepVar').value;
+            const checkedBoxes = Array.from(document.querySelectorAll('input[name="predCheckbox"]:checked'));
+            if (!depVar || checkedBoxes.length === 0) return;
+
+            const predConfig = checkedBoxes.map(cb => ({
+                name: cb.value,
+                transf: document.getElementById(domId('transf_' + cb.value)) ? document.getElementById(domId('transf_' + cb.value)).value : 'linear'
+            }));
+
+            activeModelResult = estimateOLS(depVar, transfDep, predConfig, rawMasterData);
+            if (!activeModelResult) return alert('No se pudo estimar el modelo. Compruebe datos suficientes.');
+
+            document.getElementById('resultsWrapper').classList.remove('hidden');
+            renderModelTab();
+            renderCorrelationMatrix();
+            renderDataTable();
+            buildValuationInputs();
+
+            const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+            if (activeTab === 'tab-diagnostics') {
+                renderDiagnosticsCharts();
+            } else if (activeTab === 'tab-scatters') {
+                renderScatterPlots();
+            }
+
+            if (showNotification) {
+                document.querySelector('.tab-btn[data-tab="tab-model"]').click();
+            }
+        }
+
+        function renderModelTab() {
+            const res = activeModelResult;
+
+            document.getElementById('panel_dados').textContent = res.invalidCount > 0
+                ? `${res.n} / ${res.totalN} (${res.invalidCount} inválidos excl.)`
+                : `${res.n} / ${res.totalN}`;
+            document.getElementById('panel_vars').textContent = `${res.k} / ${res.k + 1}`;
+            document.getElementById('panel_gl').textContent = res.dfRes;
+            document.getElementById('panel_r').textContent = formatNum(res.r_corr, 2);
+            document.getElementById('panel_r2').textContent = `${formatNum(res.R2 * 100, 2)}%`;
+            document.getElementById('panel_r2adj').textContent = `${formatNum(res.R2_adj * 100, 2)}%`;
+            document.getElementById('panel_f').textContent = formatNum(res.F_calc, 2);
+            document.getElementById('panel_sigf').textContent = `${formatNum(res.p_val_F * 100, 2)}%`;
+            document.getElementById('panel_dw').textContent = formatNum(res.durbinWatson, 2);
+            document.getElementById('panel_norm_1s').textContent = `${formatNum(res.normBands.b1, 2)}%`;
+            document.getElementById('panel_norm_164s').textContent = `${formatNum(res.normBands.b2, 2)}%`;
+            document.getElementById('panel_norm_196s').textContent = `${formatNum(res.normBands.b3, 2)}%`;
+            document.getElementById('panel_se').textContent = formatNum(res.seModel, 2);
+            document.getElementById('panel_outliers').textContent = `${res.outliersIndices.length} (${formatNum((res.outliersIndices.length / res.n) * 100, 2)}%)`;
+            document.getElementById('panel_aic_sc').textContent = `${formatNum(res.AIC, 2)} / ${formatNum(res.SC, 2)}`;
+
+            let eq = `${res.transfDep === 'ln' ? 'ln(Y)' : (res.transfDep === 'inv' ? '1/Y' : (res.transfDep === 'sqrt' ? '√Y' : 'Y'))} = ${formatNum(res.Beta[0][0], 2)}`;
+            res.predConfig.forEach((p, idx) => {
+                const b = res.Beta[idx + 1][0];
+                eq += ` ${b >= 0 ? '+' : '-'} ${formatNum(Math.abs(b), 2)} · ${p.transf !== 'linear' ? p.transf + '(' + p.name + ')' : p.name}`;
+            });
+            document.getElementById('txtEquationDisplay').textContent = eq;
+
+            const tbody = document.getElementById('coefTableBody');
+            tbody.innerHTML = '';
+            res.coefDetails.forEach(c => {
+                const isSig = (c.p_val * 100) <= 10;
+                const tr = document.createElement('tr');
+                tr.className = isSig ? 'hover:bg-slate-50' : 'bg-rose-50/40 hover:bg-rose-50';
+                tr.innerHTML = `
+                    <td class="p-2 font-semibold text-slate-700">${escapeHtml(c.name)}</td>
+                    <td class="p-2 text-slate-500 font-mono-code">${escapeHtml(c.transf)}</td>
+                    <td class="p-2 text-right font-mono-code font-bold">${formatNum(c.b, 2)}</td>
+                    <td class="p-2 text-right text-slate-500 font-mono-code">${formatNum(c.se, 2)}</td>
+                    <td class="p-2 text-right font-semibold text-indigo-900 font-mono-code">${formatNum(c.t, 2)}</td>
+                    <td class="p-2 text-right font-semibold font-mono-code ${isSig ? 'text-emerald-600' : 'text-rose-600'}">${formatNum(c.p_val * 100, 2)}%</td>
+                    <td class="p-2 text-right font-mono-code">${c.vif}</td>
+                    <td class="p-2 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isSig ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            ${isSig ? '≤ 10% (Grado III)' : 'No cumple Grado III'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const anovaTbody = document.getElementById('anovaTableBody');
+            anovaTbody.innerHTML = `
+                <tr>
+                    <td class="p-2 font-semibold text-slate-700">Regresión (Explicada)</td>
+                    <td class="p-2 text-right">${formatNum(res.sumSqExp, 2)}</td>
+                    <td class="p-2 text-right">${res.dfMod}</td>
+                    <td class="p-2 text-right">${formatNum(res.qmExp, 2)}</td>
+                    <td class="p-2 text-right font-bold text-indigo-900">${formatNum(res.F_calc, 2)}</td>
+                    <td class="p-2 text-right font-bold text-emerald-700">${formatNum(res.p_val_F * 100, 2)}%</td>
+                </tr>
+                <tr>
+                    <td class="p-2 font-semibold text-slate-700">Residuos (No Explicada)</td>
+                    <td class="p-2 text-right">${formatNum(res.sumSqRes, 2)}</td>
+                    <td class="p-2 text-right">${res.dfRes}</td>
+                    <td class="p-2 text-right">${formatNum(res.qmRes, 2)}</td>
+                    <td class="p-2 text-right text-slate-400">-</td>
+                    <td class="p-2 text-right text-slate-400">-</td>
+                </tr>
+                <tr class="bg-slate-50 font-bold">
+                    <td class="p-2">Total</td>
+                    <td class="p-2 text-right">${formatNum(res.sumSqTotal, 2)}</td>
+                    <td class="p-2 text-right">${res.n - 1}</td>
+                    <td class="p-2 text-right">-</td>
+                    <td class="p-2 text-right">-</td>
+                    <td class="p-2 text-right">-</td>
+                </tr>
+            `;
+
+            renderNBRCompliance(res);
+        }
+
+        function computeExtrapolationGrade(res) {
+            if (!rawMasterData.length) return { grade: 3, maxPct: 0, label: 'Sin datos de referencia' };
+            const targetRow = rawMasterData[rawMasterData.length - 1];
+            let maxPct = 0;
+            res.predConfig.forEach(p => {
+                const activeVals = rawMasterData.filter(r => r._active).map(r => parseFloat(r[p.name])).filter(v => !isNaN(v));
+                if (!activeVals.length) return;
+                const min = Math.min(...activeVals), max = Math.max(...activeVals);
+                const range = max - min;
+                const tv = parseFloat(targetRow[p.name]);
+                if (isNaN(tv) || range <= 0) return;
+                let pct = 0;
+                if (tv < min) pct = ((min - tv) / range) * 100;
+                else if (tv > max) pct = ((tv - max) / range) * 100;
+                if (pct > maxPct) maxPct = pct;
+            });
+            let grade;
+            if (maxPct <= 0) grade = 3;
+            else if (maxPct <= 15) grade = 2;
+            else if (maxPct <= 20) grade = 1;
+            else grade = 0;
+            return { grade, maxPct };
+        }
+
+        function renderNBRCompliance(res) {
+            const n = res.n, k = res.k;
+            const reqIII = 6 * (k + 1), reqII = 4 * (k + 1), reqI = 3 * (k + 1);
+            let g2 = n >= reqIII ? 3 : (n >= reqII ? 2 : 1);
+
+            let maxP = 0;
+            res.coefDetails.slice(1).forEach(c => { if (c.p_val > maxP) maxP = c.p_val; });
+            let g5 = maxP <= 0.10 ? 3 : (maxP <= 0.20 ? 2 : (maxP <= 0.30 ? 1 : 0));
+            let g6 = res.p_val_F <= 0.01 ? 3 : (res.p_val_F <= 0.02 ? 2 : (res.p_val_F <= 0.05 ? 1 : 0));
+
+            const selCarac = document.getElementById('selCaracterizacion');
+            const selIdent = document.getElementById('selIdentificacion');
+            const g1 = selCarac ? parseInt(selCarac.value, 10) : 3;
+            const g3 = selIdent ? parseInt(selIdent.value, 10) : 3;
+
+            const extrap = computeExtrapolationGrade(res);
+            const g4 = extrap.grade;
+
+            const pts = g1 + g2 + g3 + g4 + g5 + g6;
+            let finalFund = 'Grado I';
+            let fundColor = 'bg-rose-600';
+            if (pts >= 16 && g2 === 3 && g4 >= 3 && g5 === 3 && g6 === 3) {
+                finalFund = 'Grado III'; fundColor = 'bg-emerald-600';
+            } else if (pts >= 10 && g2 >= 2 && g4 >= 2 && g5 >= 2 && g6 >= 2) {
+                finalFund = 'Grado II'; fundColor = 'bg-amber-600';
+            } else if (g1 === 0 || g2 === 0 || g3 === 0 || g4 === 0 || g5 === 0 || g6 === 0) {
+                finalFund = 'Rechazado'; fundColor = 'bg-slate-700';
+            }
+
+            const gradeLabel = (g) => g > 0 ? `Grado ${['—', 'I', 'II', 'III'][g]}` : 'Rechazado';
+
+            // Guardas de seguridad DOM
+            const elFundGrade = document.getElementById('txtFundGrade');
+            if (elFundGrade) elFundGrade.textContent = `${finalFund} (${pts} pts)`;
+            
+            const elBadgeFund = document.getElementById('badgeFund');
+            if (elBadgeFund) elBadgeFund.className = `px-2.5 py-0.5 rounded-full text-xs font-bold text-white shadow-sm ${fundColor}`;
+            
+            const elFundDados = document.getElementById('panel_gfund_dados');
+            if (elFundDados) elFundDados.textContent = gradeLabel(g2);
+            
+            const elFundF = document.getElementById('panel_gfund_f');
+            if (elFundF) elFundF.textContent = gradeLabel(g6);
+            
+            const elFundGlobalPts = document.getElementById('txtFundGlobalPoints');
+            if (elFundGlobalPts) elFundGlobalPts.textContent = `Total: ${pts} / 18 pts`;
+
+            const nbrTable = document.getElementById('nbrTableBodyGlobal');
+            if (nbrTable) {
+                nbrTable.innerHTML = `
+                    <tr><td class="p-2 font-bold font-mono-code">1</td><td>Caracterización del Inmueble</td><td class="p-2 text-center text-slate-400">Completa</td><td class="p-2 text-center text-slate-400">Parcial</td><td class="p-2 text-center text-slate-400">Básica</td><td class="p-2 text-center font-semibold">Declarado por tasador</td><td class="p-2 text-center font-bold ${g1===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g1)}</td></tr>
+                    <tr><td class="p-2 font-bold font-mono-code">2</td><td>Cantidad Mínima de Datos</td><td class="p-2 text-center text-slate-400">≥ ${reqIII}</td><td class="p-2 text-center text-slate-400">≥ ${reqII}</td><td class="p-2 text-center text-slate-400">≥ ${reqI}</td><td class="p-2 text-center font-semibold font-mono-code">n = ${n}</td><td class="p-2 text-center font-bold ${g2===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g2)}</td></tr>
+                    <tr><td class="p-2 font-bold font-mono-code">3</td><td>Identificación de Datos</td><td class="p-2 text-center text-slate-400">Completa + Sitio</td><td class="p-2 text-center text-slate-400">Completa</td><td class="p-2 text-center text-slate-400">Muestral</td><td class="p-2 text-center font-semibold">Declarado por tasador</td><td class="p-2 text-center font-bold ${g3===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g3)}</td></tr>
+                    <tr><td class="p-2 font-bold font-mono-code">4</td><td>Extrapolación de Variables</td><td class="p-2 text-center text-slate-400">No permitida</td><td class="p-2 text-center text-slate-400">1 var (≤15%)</td><td class="p-2 text-center text-slate-400">Permitida (≤20%)</td><td class="p-2 text-center font-semibold font-mono-code">${formatNum(extrap.maxPct, 2)}% máx.</td><td class="p-2 text-center font-bold ${g4===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g4)}</td></tr>
+                    <tr><td class="p-2 font-bold font-mono-code">5</td><td>Significancia Regresores (t)</td><td class="p-2 text-center text-slate-400">≤ 10%</td><td class="p-2 text-center text-slate-400">≤ 20%</td><td class="p-2 text-center text-slate-400">≤ 30%</td><td class="p-2 text-center font-semibold font-mono-code">${formatNum(maxP * 100, 2)}% máx</td><td class="p-2 text-center font-bold ${g5===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g5)}</td></tr>
+                    <tr><td class="p-2 font-bold font-mono-code">6</td><td>Significancia Modelo (F)</td><td class="p-2 text-center text-slate-400">≤ 1%</td><td class="p-2 text-center text-slate-400">≤ 2%</td><td class="p-2 text-center text-slate-400">≤ 5%</td><td class="p-2 text-center font-semibold font-mono-code">${formatNum(res.p_val_F * 100, 2)}%</td><td class="p-2 text-center font-bold ${g6===3?'text-emerald-600':'text-amber-600'}">${gradeLabel(g6)}</td></tr>
+                `;
+            }
+        }
+
+        // =========================================================================
+        // DIAGNÓSTICO INDIVIDUAL DE GRÁFICOS (SIN LEYENDAS INVASIVAS, CON JB Y BP)
+        // =========================================================================
+        function renderDiagnosticsCharts() {
+            const res = activeModelResult;
+            if (!res) return;
+
+            // Actualizar paneles de texto Jarque-Bera y Breusch-Pagan
+            const txtJB = document.getElementById('txtJBStat');
+            if (txtJB) txtJB.textContent = `JB = ${formatNum(res.stat_JB, 2)}`;
+            const txtJBMoments = document.getElementById('txtJBMoments');
+            if (txtJBMoments) txtJBMoments.textContent = `${formatNum(res.skewness, 2)} / ${formatNum(res.kurtosis, 2)}`;
+            
+            const badgeJB = document.getElementById('badgeJB');
+            if (badgeJB) {
+                const isNormal = res.p_val_JB > 0.05;
+                badgeJB.className = `px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-code ${isNormal ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`;
+                badgeJB.textContent = isNormal ? `Normal (p=${formatNum(res.p_val_JB * 100, 1)}%)` : `No Normal (p=${formatNum(res.p_val_JB * 100, 1)}%)`;
+            }
+
+            const txtBP = document.getElementById('txtBPStat');
+            if (txtBP) txtBP.textContent = `LM = ${formatNum(res.stat_BP, 2)}`;
+            const txtBPPval = document.getElementById('txtBPPval');
+            if (txtBPPval) txtBPPval.textContent = `${formatNum(res.p_val_BP * 100, 2)}%`;
+            
+            const badgeBP = document.getElementById('badgeBP');
+            if (badgeBP) {
+                const isHomoscedastic = res.p_val_BP > 0.05;
+                badgeBP.className = `px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-code ${isHomoscedastic ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`;
+                badgeBP.textContent = isHomoscedastic ? 'Homocedástico' : 'Heterocedástico';
+            }
+
+            // 1. Residuos Estandarizados vs Valores Estimados (Limpio, Sin Leyendas)
+            if (chartInstances.resVsFit) chartInstances.resVsFit.destroy();
+            const canvasRes = document.getElementById('chartResidualsVsFitted');
+            if (canvasRes) {
+                const ctxRes = canvasRes.getContext('2d');
+                const normalPoints = [];
+                const outlierPoints = [];
+                for (let i = 0; i < res.n; i++) {
+                    const pt = { x: invTransf(res.Y_hat[i][0], res.transfDep), y: res.stdResiduals[i] };
+                    if (Math.abs(res.stdResiduals[i]) > 2.0) outlierPoints.push(pt);
+                    else normalPoints.push(pt);
+                }
+
+                const minFit = Math.min(...res.Y_hat.map(y => invTransf(y[0], res.transfDep)));
+                const maxFit = Math.max(...res.Y_hat.map(y => invTransf(y[0], res.transfDep)));
+
+                chartInstances.resVsFit = new Chart(ctxRes, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { data: normalPoints, backgroundColor: '#2563eb', pointRadius: 4.5, hoverRadius: 7 },
+                            { data: outlierPoints, backgroundColor: '#dc2626', pointRadius: 6.5, hoverRadius: 9 },
+                            { data: [{ x: minFit, y: 2.0 }, { x: maxFit, y: 2.0 }], type: 'line', borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false },
+                            { data: [{ x: minFit, y: 0.0 }, { x: maxFit, y: 0.0 }], type: 'line', borderColor: '#64748b', borderWidth: 1.5, pointRadius: 0, fill: false },
+                            { data: [{ x: minFit, y: -2.0 }, { x: maxFit, y: -2.0 }], type: 'line', borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `Estimado: ${formatNum(ctx.parsed.x, 2)} | e_std: ${formatNum(ctx.parsed.y, 2)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: 'Valores Estimados (Escala Original)', font: { size: 10, family: 'IBM Plex Sans' } },
+                                ticks: { callback: v => formatNum(v, 0), font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            },
+                            y: { 
+                                title: { display: true, text: 'Residuo Estandarizado (e_std)', font: { size: 10, family: 'IBM Plex Sans' } }, 
+                                min: -3.8, max: 3.8,
+                                ticks: { callback: v => formatNum(v, 1), font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Histograma de Frecuencia de los Errores (Limpio, Sin Leyendas)
+            if (chartInstances.hist) chartInstances.hist.destroy();
+            const canvasHist = document.getElementById('chartHistogramErrors');
+            if (canvasHist) {
+                const ctxHist = canvasHist.getContext('2d');
+                const bins = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0];
+                let counts = [0, 0, 0, 0, 0, 0];
+                res.stdResiduals.forEach(r => {
+                    for (let i = 0; i < 6; i++) {
+                        if (r >= bins[i] && r < bins[i+1]) counts[i]++;
+                    }
+                });
+
+                chartInstances.hist = new Chart(ctxHist, {
+                    type: 'bar',
+                    data: {
+                        labels: ['[-3σ, -2σ)', '[-2σ, -1σ)', '[-1σ, 0)', '[0, +1σ)', '[+1σ, +2σ)', '[+2σ, +3σ]'],
+                        datasets: [{ data: counts, backgroundColor: '#4f46e5', hoverBackgroundColor: '#4338ca', borderRadius: 4 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `Frecuencia: ${ctx.parsed.y} observaciones`
+                                }
+                            }
+                        },
+                        scales: { 
+                            y: { 
+                                beginAtZero: true,
+                                title: { display: true, text: 'Frecuencia Absoluta (Nº Casos)', font: { size: 10, family: 'IBM Plex Sans' } },
+                                ticks: { stepSize: 1, font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            }, 
+                            x: { 
+                                title: { display: true, text: 'Intervalos de Desviación Estándar de los Errores', font: { size: 10, family: 'IBM Plex Sans' } },
+                                ticks: { font: { size: 10, family: 'IBM Plex Mono' } },
+                                grid: { display: false }
+                            } 
+                        }
+                    }
+                });
+            }
+
+            // 3. Gráfico de Distancia de Cook (Limpio, Sin Leyendas)
+            if (chartInstances.cookPts) chartInstances.cookPts.destroy();
+            const canvasCook = document.getElementById('chartCookPoints');
+            if (canvasCook) {
+                const ctxCook = canvasCook.getContext('2d');
+                const cookNormal = [];
+                const cookOutliers = [];
+                for (let i = 0; i < res.n; i++) {
+                    const pt = { x: i + 1, y: res.cookDistances[i] };
+                    if (res.cookDistances[i] > res.cookCutLine) cookOutliers.push(pt);
+                    else cookNormal.push(pt);
+                }
+
+                chartInstances.cookPts = new Chart(ctxCook, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { data: cookNormal, backgroundColor: '#2563eb', pointRadius: 4, hoverRadius: 7 },
+                            { data: cookOutliers, backgroundColor: '#dc2626', pointRadius: 6.5, hoverRadius: 9 },
+                            { data: [{ x: 1, y: res.cookCutLine }, { x: res.n, y: res.cookCutLine }], type: 'line', borderColor: '#2563eb', borderWidth: 1.8, borderDash: [5, 5], pointRadius: 0, fill: false }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `Dato #${ctx.parsed.x} | Distancia de Cook: ${formatNum(ctx.parsed.y, 4)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: 'Nº Observación en la Muestra (i)', font: { size: 10, family: 'IBM Plex Sans' } }, 
+                                min: 1, max: res.n,
+                                ticks: { font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            },
+                            y: { 
+                                title: { display: true, text: 'Distancia de Cook (D_i)', font: { size: 10, family: 'IBM Plex Sans' } }, 
+                                min: 0, max: Math.max(1.1, res.maxCook * 1.1),
+                                ticks: { callback: v => formatNum(v, 2), font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 4. Valores Estimados vs Valores Observados (Limpio, Sin Leyendas)
+            if (chartInstances.obsVsFit) chartInstances.obsVsFit.destroy();
+            const canvasObs = document.getElementById('chartObsVsFitted');
+            if (canvasObs) {
+                const ctxObs = canvasObs.getContext('2d');
+                const obsVsFitData = res.orig_Y.map((yObs, i) => ({
+                    x: invTransf(res.Y_hat[i][0], res.transfDep),
+                    y: yObs
+                }));
+                const minObs = Math.min(...res.orig_Y);
+                const maxObs = Math.max(...res.orig_Y);
+
+                chartInstances.obsVsFit = new Chart(ctxObs, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { data: obsVsFitData, backgroundColor: '#10b981', pointRadius: 4.5, hoverRadius: 7 },
+                            { data: [{ x: minObs, y: minObs }, { x: maxObs, y: maxObs }], type: 'line', borderColor: '#6366f1', borderWidth: 1.8, pointRadius: 0, fill: false }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `Estimado: ${formatNum(ctx.parsed.x, 2)} | Observado: ${formatNum(ctx.parsed.y, 2)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: `Eje X: ${res.depVar} Estimado (Modelo)`, font: { size: 10, family: 'IBM Plex Sans' } },
+                                ticks: { callback: v => formatNum(v, 0), font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            },
+                            y: { 
+                                title: { display: true, text: `Eje Y: ${res.depVar} Observado (Mercado)`, font: { size: 10, family: 'IBM Plex Sans' } },
+                                ticks: { callback: v => formatNum(v, 0), font: { size: 9, family: 'IBM Plex Mono' } },
+                                grid: { color: '#f1f5f9' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderScatterPlots() {
+            const res = activeModelResult;
+            if (!res) return;
+            const container = document.getElementById('scatterPlotsGrid');
+            container.innerHTML = '';
+
+            res.predConfig.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 p-3.5 rounded-xl border border-slate-200';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-slate-700">${escapeHtml(res.depVar)} (Eje Y) vs ${escapeHtml(p.name)}</span>
+                        <span class="text-[10px] font-mono-code text-slate-500">${escapeHtml(p.transf)}</span>
+                    </div>
+                    <div class="h-40 relative"><canvas id="${domId('scatter_' + p.name)}"></canvas></div>
+                `;
+                container.appendChild(card);
+
+                const ctx = document.getElementById(domId('scatter_' + p.name)).getContext('2d');
+                const yPrice = res.orig_Y;
+                const xAttr = res.orig_X_cols.map(row => row[p.name]);
+
+                const scatterData = xAttr.map((valX, i) => ({ x: valX, y: yPrice[i] }));
+
+                const meanX = xAttr.reduce((a,b)=>a+b,0)/res.n, meanY = yPrice.reduce((a,b)=>a+b,0)/res.n;
+                let sxx = 0, sxy = 0;
+                for (let i = 0; i < res.n; i++) {
+                    sxx += Math.pow(xAttr[i] - meanX, 2);
+                    sxy += (xAttr[i] - meanX) * (yPrice[i] - meanY);
+                }
+                const slope = sxx > 0 ? (sxy / sxx) : 0;
+                const intercept = meanY - slope * meanX;
+                const minX = Math.min(...xAttr), maxX = Math.max(...xAttr);
+
+                new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { label: 'Datos', data: scatterData, backgroundColor: '#4f46e5', pointRadius: 3 },
+                            {
+                                label: 'Tendencia',
+                                data: [{ x: minX, y: intercept + slope * minX }, { x: maxX, y: intercept + slope * maxX }],
+                                type: 'line', borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: `Eje X: ${p.name}`, font: { size: 9 } },
+                                ticks: { callback: v => formatNum(v, 2) }
+                            },
+                            y: { 
+                                title: { display: true, text: `Eje Y: ${res.depVar}`, font: { size: 9 } },
+                                ticks: { callback: v => formatNum(v, 2) }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function renderCorrelationMatrix() {
+            const res = activeModelResult;
+            if (!res) return;
+            const vars = res.predConfig.map(p => ({
+                label: p.transf !== 'linear' ? `${p.transf}(${p.name})` : p.name,
+                vals: res.transf_X_cols[p.name]
+            }));
+            vars.push({
+                label: res.transfDep !== 'linear' ? `${res.transfDep}(${res.depVar})` : res.depVar,
+                vals: res.Y_mat.map(y => y[0])
+            });
+
+            const m = vars.length;
+            const table = document.getElementById('correlationMatrixTable');
+            let html = '<thead><tr class="bg-slate-100 text-slate-700 font-bold"><th class="p-2">Variable</th>';
+            vars.forEach(v => html += `<th class="p-2">${escapeHtml(v.label)}</th>`);
+            html += '</tr></thead><tbody>';
+
+            for (let i = 0; i < m; i++) {
+                html += `<tr class="border-t"><td class="p-2 font-semibold text-slate-700 bg-slate-50 text-left">${escapeHtml(vars[i].label)}</td>`;
+                const meanI = vars[i].vals.reduce((a,b)=>a+b,0)/res.n;
+                for (let j = 0; j < m; j++) {
+                    const meanJ = vars[j].vals.reduce((a,b)=>a+b,0)/res.n;
+                    let num = 0, denI = 0, denJ = 0;
+                    for (let k = 0; k < res.n; k++) {
+                        const diffI = vars[i].vals[k] - meanI;
+                        const diffJ = vars[j].vals[k] - meanJ;
+                        num += diffI * diffJ;
+                        denI += diffI * diffI;
+                        denJ += diffJ * diffJ;
+                    }
+                    const r = (denI > 0 && denJ > 0) ? (num / Math.sqrt(denI * denJ)) : 0;
+                    const absR = Math.abs(r);
+                    let cellBg = '';
+                    if (i !== j && absR >= 0.80) cellBg = 'bg-rose-100 text-rose-800 font-bold';
+                    else if (i !== j && absR >= 0.50) cellBg = 'bg-amber-50 text-amber-900';
+                    else cellBg = 'text-slate-600';
+                    html += `<td class="p-2 font-mono-code ${cellBg}">${formatNum(r, 2)}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        function buildValuationInputs() {
+            const res = activeModelResult;
+            if (!res) return;
+            const container = document.getElementById('targetInputsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const lastRow = rawMasterData.length > 0 ? rawMasterData[rawMasterData.length - 1] : null;
+
+            res.predConfig.forEach(p => {
+                const rawVals = rawMasterData.filter(r => r._active).map(r => parseFloat(r[p.name]));
+                const min = rawVals.length > 0 ? Math.min(...rawVals) : 0;
+                const max = rawVals.length > 0 ? Math.max(...rawVals) : 0;
+
+                let initialNum = (lastRow && lastRow[p.name] !== undefined) 
+                    ? parseFloat(lastRow[p.name]) 
+                    : (rawVals.reduce((a,b)=>a+b,0) / (rawVals.length || 1));
+
+                const div = document.createElement('div');
+                div.className = 'flex flex-col';
+                div.innerHTML = `
+                    <label class="text-slate-600 font-semibold text-[11px] mb-0.5">${escapeHtml(p.name)}</label>
+                    <input type="text" id="${domId('val_target_' + p.name)}" value="${formatNum(initialNum, 2)}" data-min="${min}" data-max="${max}"
+                        oninput="evaluateTargetProperty()"
+                        class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 font-medium font-mono-code">
+                    <span class="text-[9px] text-slate-400 mt-0.5 font-mono-code">[${formatNum(min, 2)} - ${formatNum(max, 2)}]</span>
+                `;
+                container.appendChild(div);
+            });
+
+            evaluateTargetProperty();
+        }
+
+        function evaluateTargetProperty() {
+            const res = activeModelResult;
+            if (!res) return;
+
+            let targetVector = [1.0];
+            let areaVal = 1.0;
+            let hasExtrapolation = false;
+
+            res.predConfig.forEach(p => {
+                const inp = document.getElementById(domId('val_target_' + p.name));
+                const val = inp ? parseCleanFloat(inp.value) : 0;
+                const min = inp ? parseFloat(inp.getAttribute('data-min')) : 0;
+                const max = inp ? parseFloat(inp.getAttribute('data-max')) : 0;
+
+                if (val < min || val > max) hasExtrapolation = true;
+                if (/^(ac|area|at|sup|superficie)$/i.test(p.name)) areaVal = val;
+
+                targetVector.push(applyTransf(val, p.transf));
+            });
+
+            if (areaVal === 1.0 && rawMasterData.length > 0) {
+                const last = rawMasterData[rawMasterData.length - 1];
+                const areaKey = Object.keys(last).find(k => /^(ac|area|at|sup|superficie)$/i.test(k));
+                if (areaKey && last[areaKey]) areaVal = parseFloat(last[areaKey]);
+            }
+
+            const alertEl = document.getElementById('extrapolationAlert');
+            if (alertEl) {
+                if (hasExtrapolation) alertEl.classList.remove('hidden');
+                else alertEl.classList.add('hidden');
+            }
+
+            let y_hat_t = 0;
+            for (let j = 0; j <= res.k; j++) y_hat_t += targetVector[j] * res.Beta[j][0];
+
+            let h0 = 0;
+            for (let i = 0; i <= res.k; i++) {
+                for (let j = 0; j <= res.k; j++) {
+                    h0 += targetVector[i] * res.invXtX[i][j] * targetVector[j];
+                }
+            }
+
+            const se_mean = Math.sqrt(res.varModel * h0);
+            const t_80 = tQuantile(0.80, res.dfRes);
+
+            const limInf_t = y_hat_t - t_80 * se_mean;
+            const limSup_t = y_hat_t + t_80 * se_mean;
+
+            let valCentral = invTransf(y_hat_t, res.transfDep);
+            let limInf_IC = invTransf(limInf_t, res.transfDep);
+            let limSup_IC = invTransf(limSup_t, res.transfDep);
+
+            const isPU = res.depVar.toLowerCase().includes('pu') || document.getElementById('depVarType').value === 'PU';
+            let valorTotalEstimado = isPU ? (valCentral * areaVal) : valCentral;
+            let valorUnitEstimado = isPU ? valCentral : (areaVal > 0 ? valCentral / areaVal : 0);
+
+            const ampIC = valCentral > 0 ? (((limSup_IC - limInf_IC) / valCentral) * 100) : 0;
+            let precGrade = 'Grado I';
+            if (ampIC <= 30) precGrade = 'Grado III';
+            else if (ampIC <= 40) precGrade = 'Grado II';
+
+            // Guardas de seguridad DOM
+            const elPrecGrade = document.getElementById('txtPrecGrade');
+            if (elPrecGrade) elPrecGrade.textContent = `${precGrade} (${formatNum(ampIC, 2)}%)`;
+
+            const arbInf = valorTotalEstimado * 0.85;
+            const arbSup = valorTotalEstimado * 1.15;
+            const icTotInf = isPU ? (limInf_IC * areaVal) : limInf_IC;
+            const icTotSup = isPU ? (limSup_IC * areaVal) : limSup_IC;
+
+            const admInf = Math.max(icTotInf, arbInf);
+            const admSup = Math.min(icTotSup, arbSup);
+
+            document.getElementById('valCentralEst').textContent = `UM ${formatNum(valorTotalEstimado, 2)}`;
+            document.getElementById('valCentralUnitEst').textContent = `${formatNum(valorUnitEstimado, 2)} UM/m² (Área: ${formatNum(areaVal, 2)} m²)`;
+
+            document.getElementById('valIC80Range').textContent = `[${formatNum(icTotInf, 2)} - ${formatNum(icTotSup, 2)}]`;
+            document.getElementById('valIC80Amp').textContent = `Amplitud: ${formatNum(ampIC, 2)}% (${precGrade})`;
+
+            document.getElementById('valArbitrioRange').textContent = `[${formatNum(arbInf, 2)} - ${formatNum(arbSup, 2)}]`;
+            document.getElementById('valAdmissibleRange').textContent = `[${formatNum(admInf, 2)} - ${formatNum(admSup, 2)}]`;
+        }
+
+        function resetApp() {
+            rawMasterData = [];
+            availableColumns = [];
+            activeModelResult = null;
+            document.getElementById('datasetName').textContent = 'Ninguno';
+            document.getElementById('dataCountBadge').textContent = '0 / 0 activos';
+            document.getElementById('selectDepVar').innerHTML = '<option value="">Seleccionar...</option>';
+            document.getElementById('independentVarsContainer').innerHTML = '<p class="text-slate-400 italic text-[11px] col-span-2">Cargue datos para configurar variables.</p>';
+            document.getElementById('resultsWrapper').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
