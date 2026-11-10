@@ -92,38 +92,69 @@
 <body class="antialiased min-h-screen flex flex-col">
 
     <!-- Navbar Global -->
-    <header class="bg-[#0A1B2E] text-white shadow-lg sticky top-0 z-50 border-b border-[#C4913F]/30 backdrop-blur-md bg-opacity-95">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            <a href="#top" class="flex items-center space-x-3 text-white no-underline">
-                <div class="bg-[#C4913F] p-2 rounded-lg text-[#0A1B2E]">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 20 L9 12 L14 15 L21 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="9" cy="12" r="1.6" fill="currentColor"/>
-                        <circle cx="14" cy="15" r="1.6" fill="currentColor"/>
-                        <circle cx="21" cy="5" r="1.6" fill="currentColor"/>
-                    </svg>
+        <!-- Navbar Global con Logos y Título Prominente EVMC -->
+    <header class="bg-[#0A1B2E] text-white shadow-xl sticky top-0 z-50 border-b border-[#C4913F]/30 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <!-- Fila superior: Logo Gris (izq) + Título Grande Centrado + Logo Blanco (der) -->
+            <div class="flex items-center justify-between gap-4 pb-2.5 border-b border-slate-800/80">
+                <!-- Logo Izquierdo: Gris metálico circular (LOGO EVMC) -->
+                <div class="flex items-center flex-shrink-0">
+                    <img src="LOGO EVMC.jpg.png" 
+                         onerror="this.onerror=null; this.src='LOGO EVMC.png';"
+                         alt="Escuela de Valuación Miguel Camacaro" 
+                         class="h-14 md:h-16 w-14 md:w-16 object-contain rounded-full drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-slate-600/60 p-0.5 bg-slate-800/40">
                 </div>
-                <div>
-                    <span class="text-base sm:text-lg font-bold tracking-tight text-slate-100 flex items-center gap-2">
-                        EconometricVal Pro 
-                        <span class="text-[10px] bg-[#C4913F]/20 text-[#E4C489] px-2 py-0.5 rounded border border-[#C4913F]/40 font-mono-code">NBR 14653-2</span>
-                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">v2.2</span>
-                    </span>
-                </div>
-            </a>
-            
-            <nav class="hidden md:flex items-center space-x-6 text-xs font-mono-code text-slate-300">
-                <a href="#norma" class="hover:text-[#E4C489] transition">Encuadramiento NBR</a>
-                <a href="#app" class="hover:text-[#E4C489] transition">Laboratorio MRLM</a>
-            </nav>
 
-            <div class="flex items-center space-x-3">
-                <a href="#app" class="text-xs bg-[#C4913F] hover:bg-[#b07f33] text-[#0A1B2E] px-4 py-2 rounded-lg font-bold transition shadow flex items-center gap-1.5 font-mono-code">
-                    <i class="fa-solid fa-calculator"></i> Ir a la Aplicación
+                <!-- Centro: Título Grande y Prominente -->
+                <div class="text-center flex-1 px-2">
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white uppercase drop-shadow-md">
+                        Escuela de Valuación <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">Miguel Camacaro</span>
+                    </h1>
+                    <p class="text-[11px] sm:text-xs text-slate-400 tracking-wider font-semibold uppercase hidden sm:block">
+                        Ciencia de la Valuación • Ciencia de Datos • Inteligencia Artificial Generativa
+                    </p>
+                </div>
+
+                <!-- Logo Derecho: Logo Blanco (Miguel Camacaro Ediciones) -->
+                <div class="flex items-center flex-shrink-0">
+                    <img src="LogoMCE.png" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/120x60/ffffff/0f172a?text=Logo+MCE';" 
+                         alt="Miguel Camacaro Ediciones" 
+                         class="h-12 md:h-14 object-contain bg-white rounded-lg p-1 drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)] border border-slate-300">
+                </div>
+            </div>
+
+            <!-- Fila inferior: Branding EconometricVal Pro + Enlaces de navegación + Botones de acción -->
+            <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono-code text-slate-300">
+                <a href="#top" class="flex items-center space-x-2 text-white no-underline">
+                    <div class="bg-[#C4913F] p-1.5 rounded-lg text-[#0A1B2E]">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 20 L9 12 L14 15 L21 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="9" cy="12" r="1.6" fill="currentColor"/>
+                            <circle cx="14" cy="15" r="1.6" fill="currentColor"/>
+                            <circle cx="21" cy="5" r="1.6" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <span class="font-bold tracking-tight text-slate-100 flex items-center gap-1.5">
+                        EconometricVal Pro
+                        <span class="text-[9px] bg-[#C4913F]/20 text-[#E4C489] px-1.5 py-0.2 rounded border border-[#C4913F]/40">NBR 14653-2</span>
+                        <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded border border-emerald-400/30">v2.2</span>
+                    </span>
                 </a>
-                <a href="https://paypal.me/spilimcurso" target="_blank" rel="noopener noreferrer" class="hidden sm:flex text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 px-3 py-2 rounded-lg font-semibold transition items-center gap-1.5">
-                    <i class="fa-brands fa-paypal"></i> Donar
-                </a>
+
+                <nav class="flex items-center space-x-4">
+                    <a href="#norma" class="hover:text-[#E4C489] transition py-1 px-2 rounded hover:bg-slate-800">Encuadramiento NBR</a>
+                    <a href="#app" class="hover:text-[#E4C489] transition py-1 px-2 rounded hover:bg-slate-800">Laboratorio MRLM</a>
+                </nav>
+
+                <div class="flex items-center space-x-2.5">
+                    <a href="#app" class="text-xs bg-[#C4913F] hover:bg-[#b07f33] text-[#0A1B2E] px-3.5 py-1.5 rounded-lg font-bold transition shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-calculator"></i> Ir a la Aplicación
+                    </a>
+                    <a href="https://paypal.me/spilimcurso" target="_blank" rel="noopener noreferrer" class="hidden sm:flex text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 px-3 py-1.5 rounded-lg font-semibold transition items-center gap-1.5">
+                        <i class="fa-brands fa-paypal"></i> Donar
+                    </a>
+                </div>
             </div>
         </div>
     </header>
