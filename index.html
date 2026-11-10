@@ -928,20 +928,80 @@
     <!-- MOTOR ECONOMÉTRICO & CONTROLADORES JAVASCRIPT REVISADOS   -->
     <!-- ========================================================= -->
     <script>
+        // --- CONVERSOR NUMÉRICO ADAPTATIVO (PUNTO EN MILES, COMA EN DECIMALES) ---
+        function parseCleanFloat(val) {
+            if (val === null || val === undefined || val === '') return NaN;
+            if (typeof val === 'number') return isNaN(val) ? NaN : val;
+            let s = String(val).trim().replace(/\s/g, '');
+            if (!s) return NaN;
+
+            // Caso 1: Contiene tanto punto como coma (ej. 1.157,96 o 1,157.96)
+            if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
+                if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+                    // Formato hispano/europeo: 1.157,96 -> 1157.96 | 165.000,00 -> 165000.00
+                    s = s.replace(/\./g, '').replace(',', '.');
+                } else {
+                    // Formato anglosajón: 1,157.96 -> 1157.96
+                    s = s.replace(/,/g, '');
+                }
+            } 
+            // Caso 2: Solo contiene comas (ej. 743,08) -> la coma es decimal
+            else if (s.indexOf(',') !== -1) {
+                s = s.replace(',', '.');
+            } 
+            // Caso 3: Solo contiene puntos
+            else if (s.indexOf('.') !== -1) {
+                const parts = s.split('.');
+                if (parts.length > 2) {
+                    // Múltiples puntos: 1.000.000 -> 1000000
+                    s = s.replace(/\./g, '');
+                } else if (parts.length === 2 && parts[1].length === 3 && parts[0].length >= 1) {
+                    // Entero con punto en miles (ej. 165.000)
+                    s = s.replace('.', '');
+                }
+            }
+
+            const parsed = parseFloat(s);
+            return isNaN(parsed) ? NaN : parsed;
+        }
+
+        // --- PARSER DE CSV CON DETECCIÓN AUTOMÁTICA DE DELIMITADOR ---
+        function parseCustomCSV(text) {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length === 0) return [];
+            
+            // Quitar BOM si existe
+            const firstLine = lines[0].replace(/^\uFEFF/, '');
+            const countSemi = (firstLine.match(/;/g) || []).length;
+            const countComma = (firstLine.match(/,/g) || []).length;
+            const countTab = (firstLine.match(/\t/g) || []).length;
+            
+            let delim = ',';
+            if (countSemi > countComma && countSemi >= countTab) delim = ';';
+            else if (countTab > countComma && countTab >= countSemi) delim = '\t';
+            
+            const headers = firstLine.split(delim).map(h => h.trim().replace(/^[\"']|[\"']$/g, ''));
+            const rows = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const vals = line.split(delim).map(v => v.trim().replace(/^[\"']|[\"']$/g, ''));
+                const row = {};
+                headers.forEach((h, idx) => {
+                    row[h] = vals[idx] !== undefined ? vals[idx] : '';
+                });
+                rows.push(row);
+            }
+            return rows;
+        }
+
         function formatNum(val, dec = 2) {
             if (val === null || val === undefined || isNaN(val)) return '0,00';
             return Number(val).toLocaleString('de-DE', {
                 minimumFractionDigits: dec,
                 maximumFractionDigits: dec
             });
-        }
-
-        function parseCleanFloat(strVal) {
-            if (strVal === null || strVal === undefined) return 0;
-            if (typeof strVal === 'number') return strVal;
-            const cleaned = String(strVal).trim().replace(/\s/g, '').replace(',', '.');
-            const parsed = parseFloat(cleaned);
-            return isNaN(parsed) ? 0 : parsed;
         }
 
         function escapeHtml(str) {
@@ -1076,17 +1136,25 @@
         }
 
         function loadMasterDataset(data, name) {
+            availableColumns = Object.keys(data[0]).filter(k => !k.startsWith('_'));
+
             rawMasterData = data.map((row, i) => {
-                const item = { ...row, _id: i + 1, _active: true };
-                const areaKey = Object.keys(item).find(k => /^(ac|area|at|sup|superficie)$/i.test(k));
-                const acVal = areaKey ? parseFloat(item[areaKey]) : null;
+                const item = { _id: i + 1, _active: true };
+                availableColumns.forEach(col => {
+                    const raw = row[col];
+                    const num = parseCleanFloat(raw);
+                    item[col] = !isNaN(num) ? num : raw;
+                });
+
+                // Detección automática de Superficie/Área para calcular PU o PT si faltan
+                const areaKey = availableColumns.find(k => /^(ac|area|at|sup|superficie)$/i.test(k));
+                const acVal = areaKey && typeof item[areaKey] === 'number' ? item[areaKey] : null;
 
                 if (acVal && item.PT && !item.PU) item.PU = parseFloat((item.PT / acVal).toFixed(2));
                 if (acVal && item.PU && !item.PT) item.PT = parseFloat((item.PU * acVal).toFixed(2));
                 return item;
             });
 
-            availableColumns = Object.keys(rawMasterData[0]).filter(k => !k.startsWith('_'));
             document.getElementById('datasetName').textContent = name;
             
             const selectDep = document.getElementById('selectDepVar');
@@ -1095,7 +1163,7 @@
                 const opt = document.createElement('option');
                 opt.value = col;
                 opt.textContent = col;
-                if (col.toLowerCase() === 'pt') opt.selected = true;
+                if (/^(pt|pu|precio|valor)$/i.test(col)) opt.selected = true;
                 selectDep.appendChild(opt);
             });
 
@@ -1104,45 +1172,70 @@
             runActiveModel(false);
         }
 
+        // --- GESTOR DE CARGA DE ARCHIVOS (.XLSX, .XLS, .CSV) ---
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                let workbook, json;
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    workbook = XLSX.read(data, { type: 'array' });
-                    json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                } catch (err) {
-                    alert('No se pudo leer el archivo. Verifique que sea un .xlsx, .xls o .csv válido.');
-                    return;
-                }
-                if (!json || json.length === 0) return alert('Archivo sin datos legibles.');
+            const fileName = file.name.toLowerCase();
 
-                const notices = [];
-                let sliceData = json;
-                if (sliceData.length > 150) {
-                    notices.push(`Se truncó la muestra a los primeros 150 registros (el archivo tenía ${sliceData.length}).`);
-                    sliceData = sliceData.slice(0, 150);
-                }
+            if (fileName.endsWith('.csv')) {
+                const textReader = new FileReader();
+                textReader.onload = function(evt) {
+                    try {
+                        const text = evt.target.result;
+                        const json = parseCustomCSV(text);
+                        if (!json || json.length === 0) {
+                            alert('El archivo CSV no contiene registros válidos.');
+                            return;
+                        }
+                        processAndLoadRows(json, file.name);
+                    } catch (err) {
+                        alert('Error al procesar el archivo CSV: ' + err.message);
+                    }
+                };
+                textReader.readAsText(file, 'UTF-8');
+            } else {
+                const arrayReader = new FileReader();
+                arrayReader.onload = function(evt) {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', raw: true });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(firstSheet);
+                        if (!json || json.length === 0) {
+                            alert('La planilla Excel no contiene datos legibles.');
+                            return;
+                        }
+                        processAndLoadRows(json, file.name);
+                    } catch (err) {
+                        alert('No se pudo leer la planilla Excel (.xlsx / .xls).');
+                    }
+                };
+                arrayReader.readAsArrayBuffer(file);
+            }
+        }
 
-                const allCols = Object.keys(sliceData[0] || {});
-                if (allCols.length > 15) {
-                    notices.push(`Se conservaron solo las primeras 15 columnas de ${allCols.length} detectadas.`);
-                    const keepCols = allCols.slice(0, 15);
-                    sliceData = sliceData.map(row => {
-                        const trimmed = {};
-                        keepCols.forEach(c => { trimmed[c] = row[c]; });
-                        return trimmed;
-                    });
-                }
+        function processAndLoadRows(json, fileName) {
+            let sliceData = json;
+            const notices = [];
+            if (sliceData.length > 150) {
+                notices.push(`Se acotó la muestra a los primeros 150 registros.`);
+                sliceData = sliceData.slice(0, 150);
+            }
 
-                if (notices.length) alert(notices.join('\n'));
-                loadMasterDataset(sliceData, file.name);
-            };
-            reader.onerror = () => alert('Error al leer el archivo del disco.');
-            reader.readAsArrayBuffer(file);
+            const allCols = Object.keys(sliceData[0] || {});
+            if (allCols.length > 15) {
+                notices.push(`Se conservaron las primeras 15 columnas.`);
+                const keepCols = allCols.slice(0, 15);
+                sliceData = sliceData.map(row => {
+                    const trimmed = {};
+                    keepCols.forEach(c => { trimmed[c] = row[c]; });
+                    return trimmed;
+                });
+            }
+
+            if (notices.length) alert(notices.join('\n'));
+            loadMasterDataset(sliceData, fileName);
         }
 
         function updatePredictorCheckboxes() {
@@ -1295,7 +1388,7 @@
             const requiredCols = [depVar, ...predConfig.map(p => p.name)];
             const candidateRows = dataset.filter(r => r._active !== false);
             const activeData = candidateRows.filter(r =>
-                requiredCols.every(col => !isNaN(parseFloat(r[col])))
+                requiredCols.every(col => !isNaN(parseCleanFloat(r[col])))
             );
             const invalidCount = candidateRows.length - activeData.length;
 
@@ -1307,7 +1400,7 @@
             predConfig.forEach(p => { transf_X_cols[p.name] = []; });
 
             for (let i = 0; i < n; i++) {
-                const rawY = parseFloat(activeData[i][depVar]);
+                const rawY = parseCleanFloat(activeData[i][depVar]);
                 orig_Y.push(rawY);
                 const tY = applyTransf(rawY, transfDep);
                 Y_mat.push([tY]);
@@ -1315,7 +1408,7 @@
                 let rowX = [1.0];
                 let rowOrigX = {};
                 predConfig.forEach(p => {
-                    const rawX = parseFloat(activeData[i][p.name]);
+                    const rawX = parseCleanFloat(activeData[i][p.name]);
                     rowOrigX[p.name] = rawX;
                     const tX = applyTransf(rawX, p.transf);
                     transf_X_cols[p.name].push(tX);
